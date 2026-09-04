@@ -1,0 +1,458 @@
+/* ==========================================================================
+   LEMON TECH — Design System Tokens
+   Portado do template de apresentação "Lemon Tech" (frontend-slides).
+   Uso: web responsivo (não é mais um palco fixo 1920x1080).
+
+   TEMAS: dark é o padrão (nenhum atributo necessário). Para light, defina
+   data-theme="light" no <html> ou <body>:
+     <html data-theme="light">
+   ou via JS (com persistência):
+     document.documentElement.setAttribute('data-theme', 'light');
+
+   O light NÃO é uma inversão automática de cores — várias tonalidades
+   precisaram ser recalculadas para manter contraste WCAG AA (ver comentários
+   no bloco [data-theme="light"] abaixo e o README.md para o raciocínio).
+
+   Como importar:
+     <link rel="stylesheet" href="tokens.css">
+   ou em CSS/Sass:
+     @import url("./tokens.css");
+
+   Fontes: adicione ao <head> antes deste arquivo:
+     <link rel="preconnect" href="https://fonts.googleapis.com">
+     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+     <link href="https://fonts.googleapis.com/css2?family=Funnel+Display:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+   ========================================================================== */
+
+:root{
+  /* --- Paleta: tema DARK (padrão) --- */
+  --lt-slate:#242F35;        /* superfície/fundo do tema atual */
+  --lt-ink:#0D1611;          /* invariante: fundo mais profundo / recesso / texto sobre superfície clara sólida */
+  --lt-ink-2:#1A2429;        /* invariante: superfície intermediária */
+  --lt-lime:#D2F5A3;         /* accent único do tema atual — luz do sistema */
+  --lt-lime-soft:#E8FAD1;    /* invariante: texto claro sobre superfícies sempre-escuras (badge normal, prompt block) */
+  --lt-yellow:#F9D933;       /* invariante: marcador de restrição dentro do prompt block (sempre escuro) */
+  --lt-green:#5CC97B;        /* invariante: matiz secundário base (glows derivam daqui) */
+  --lt-teal:#475F5F;         /* invariante: fundo do badge normal — sempre escuro nos dois temas */
+  --lt-red:#FF6F61;          /* alerta do tema atual — SÓ para atenção alta — nunca decorativo */
+  --lt-red-soft:#FFB4A8;     /* vermelho de alerta suavizado p/ textos longos, do tema atual */
+  --lt-white:#FFFFFF;        /* constante literal — branco puro, não muda com o tema */
+  --lt-muted:rgba(255,255,255,0.62);
+  --lt-line:rgba(210,245,163,0.22);
+  --lt-line-soft:rgba(255,255,255,0.08);
+  --lt-red-line:rgba(255,111,97,0.28);
+  --lt-red-bg:rgba(255,111,97,0.08);
+  --lt-card-bg:rgba(255,255,255,0.045);
+  --lt-card-bg-accent:rgba(210,245,163,0.07);
+  --lt-pullquote-bg:rgba(210,245,163,0.08);
+  --lt-prompt-bg:rgba(13,22,17,0.55); /* invariante: bloco de prompt é sempre escuro, nos dois temas */
+
+  /* --- Tokens semânticos (papel muda de valor por tema, não de nome) --- */
+  --lt-text:#FFFFFF;          /* título/texto forte — branco no dark, ink no light */
+  --lt-on-accent:#0D1611;     /* texto sobre preenchimento sólido de --lt-lime (botão primário) */
+  --lt-on-alert:#0D1611;      /* texto sobre preenchimento sólido de --lt-red (badge de alerta) */
+  --lt-pullquote-text:#E8FAD1;/* texto do callout de destaque — lime-soft no dark, o próprio accent no light */
+
+  /* --- Glow: cores e opacidade específicas para a atmosfera, dissociadas do accent de texto --- */
+  --lt-glow-a:#D2F5A3;
+  --lt-glow-b:#5CC97B;
+  --lt-glow-opacity:.16;
+  --lt-tagline-opacity:.85;
+
+  /* --- Tipografia (famílias) --- */
+  --lt-f-disp:'Funnel Display', sans-serif;
+  --lt-f-body:'Manrope', sans-serif;
+  --lt-f-mono:'JetBrains Mono', ui-monospace, monospace;
+
+  /* --- Escala tipográfica fluida (clamp: mín, preferido, máx) ---
+       Convertida do palco fixo (1920px) para viewport real.
+       Ajuste os valores de vw se seu layout tiver sidebar/max-width diferente. */
+  --lt-size-cover:   clamp(2.75rem, 2rem + 4.2vw, 6.5rem);   /* era 132px */
+  --lt-size-h1:      clamp(2.25rem, 1.6rem + 2.8vw, 4rem);    /* era 74px */
+  --lt-size-h2:      clamp(2rem,   1.5rem + 2.2vw, 3.4rem);   /* era 64px */
+  --lt-size-h3:      clamp(1.6rem, 1.3rem + 1.4vw, 2.6rem);   /* era 52px */
+  --lt-size-quote:   clamp(1.75rem,1.3rem + 2vw,  3.2rem);    /* era 62px */
+  --lt-size-card-title: clamp(1.25rem, 1rem + .8vw, 1.75rem); /* era 34px */
+  --lt-size-num:     clamp(1.8rem, 1.2rem + 2vw, 2.7rem);     /* era 52px */
+  --lt-size-lede:    clamp(1.05rem, .95rem + .4vw, 1.3rem);   /* era 25px */
+  --lt-size-body:    clamp(.95rem, .9rem + .2vw, 1.05rem);    /* era 20px */
+  --lt-size-mono:    clamp(.85rem, .82rem + .1vw, .9rem);     /* era 17px */
+  --lt-size-eyebrow: .8125rem;   /* 13px, tracked uppercase */
+  --lt-size-badge:   .75rem;     /* 12px, tracked uppercase */
+  --lt-size-pagenum: .75rem;
+
+  /* --- Espaçamento / raios --- */
+  --lt-radius-card: 18px;
+  --lt-radius-prompt: 16px;
+  --lt-radius-badge: 6px;
+  --lt-gap-grid: 1.75rem;
+  --lt-pad-card: 2rem 2.1rem;
+
+  /* --- Sombra: o sistema não usa box-shadow. Profundidade vem de
+       tint translúcido + glow. Mantido aqui só para documentar a regra. --- */
+  --lt-shadow-none: none;
+}
+
+/* ==========================================================================
+   TEMA LIGHT — override explícito via [data-theme="light"]
+   Dark continua sendo o padrão sempre que este atributo não estiver presente.
+
+   Isto NÃO é uma inversão automática. Cada valor abaixo foi recalculado para
+   contraste WCAG AA contra o novo fundo (#FAF7EE) — ver README.md para as
+   tabelas de contraste. Dois achados que vale saber antes de mexer aqui:
+
+   1. O lime (#D2F5A3) não tem contraste nenhum em fundo claro — o acento do
+      light é um musgo mais escuro (#3F6B1D), não uma versão clara do lime.
+   2. No dark, textos longos usam uma variante *suavizada* do accent (porque
+      o lime puro cansa a vista em parágrafo). No light é o oposto: o musgo
+      e o vermelho já nascem escurecidos para dar contraste, então suavizar
+      mais SUBTRAI contraste. Por isso --lt-pullquote-text e --lt-red-soft
+      no light apontam para a própria cor base, não para uma versão mais clara.
+   ========================================================================== */
+:root[data-theme="light"]{
+  --lt-slate:#FAF7EE;
+  --lt-lime:#3F6B1D;                        /* "musgo" — não é o lime clareado, é recalculado */
+  --lt-muted:rgba(13,22,17,0.62);           /* mesmo alfa do dark (62%), só espelha ink em vez de white */
+  --lt-line:rgba(63,107,29,0.22);
+  --lt-line-soft:rgba(13,22,17,0.08);
+  --lt-card-bg:rgba(13,22,17,0.045);        /* mesmo alfa do dark (4.5%), tint escuro em vez de branco */
+  --lt-card-bg-accent:rgba(63,107,29,0.07);
+  --lt-pullquote-bg:rgba(63,107,29,0.08);
+  --lt-red:#C6301F;                          /* coral não passa em fundo claro (2.55:1) — vermelho mais forte */
+  --lt-red-soft:#C6301F;                     /* ver nota 2 acima — igual ao --lt-red no light */
+  --lt-red-line:rgba(198,48,31,0.28);
+  --lt-red-bg:rgba(198,48,31,0.06);          /* alfa levemente menor que o dark p/ manter margem de contraste do texto */
+
+  --lt-text:#0D1611;
+  --lt-on-accent:#FFFFFF;                    /* musgo é escuro — texto sobre ele precisa ser claro (ink falha: 2.92:1) */
+  --lt-on-alert:#FFFFFF;                     /* mesma razão — vermelho do light é mais escuro que o coral do dark */
+  --lt-pullquote-text:#3F6B1D;               /* ver nota 2 acima */
+
+  --lt-glow-a:#BFE28C;                       /* pastel médio — muito claro vira invisível a 12-16% de opacidade */
+  --lt-glow-b:#8FD9A8;
+  --lt-glow-opacity:.12;
+  --lt-tagline-opacity:1;                    /* musgo@85% cai pra 4.26:1 (abaixo de AA); sem esse dimming no light */
+}
+
+/* ==========================================================================
+   BASE
+   ========================================================================== */
+.lt-root, body.lt-theme{
+  background:var(--lt-slate);
+  color:var(--lt-text);
+  font-family:var(--lt-f-body);
+  line-height:1.5;
+}
+
+.lt-eyebrow{
+  font-family:var(--lt-f-body);
+  font-weight:700;
+  font-size:var(--lt-size-eyebrow);
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:var(--lt-lime);
+}
+
+.lt-badge{
+  display:inline-block;
+  background:var(--lt-teal);
+  color:var(--lt-lime-soft);
+  font-family:var(--lt-f-body);
+  font-weight:700;
+  font-size:var(--lt-size-badge);
+  letter-spacing:.14em;
+  text-transform:uppercase;
+  padding:.5rem 1rem;
+  border-radius:var(--lt-radius-badge);
+}
+/* Variante de alerta — usar SÓ para atenção alta real (risco, bloqueio, crítico).
+   Nunca decorativo; no máximo um por seção/card. */
+.lt-badge.alert{
+  background:var(--lt-red);
+  color:var(--lt-on-alert);
+}
+
+h1.lt-cover, .lt-cover-title{
+  font-family:var(--lt-f-disp);
+  font-weight:700;
+  font-size:var(--lt-size-cover);
+  line-height:1.02;
+  letter-spacing:-.03em;
+  color:var(--lt-text);
+}
+h1.lt-cover em, .lt-cover-title em,
+.lt-title em, .lt-quote em,
+.lt-pullquote em, .lt-lede em, .lt-body em{
+  font-style:normal;
+  color:var(--lt-lime);
+}
+
+.lt-title{
+  font-family:var(--lt-f-disp);
+  font-weight:600;
+  font-size:var(--lt-size-h1);
+  line-height:1.08;
+  letter-spacing:-.02em;
+  color:var(--lt-text);
+}
+.lt-title-sm{
+  font-size:var(--lt-size-h3);
+  font-weight:600;
+  font-family:var(--lt-f-disp);
+  letter-spacing:-.018em;
+  line-height:1.12;
+}
+
+.lt-lede{
+  font-family:var(--lt-f-body);
+  font-weight:400;
+  font-size:var(--lt-size-lede);
+  line-height:1.55;
+  color:var(--lt-muted);
+  max-width:60ch;
+}
+
+.lt-body{
+  font-family:var(--lt-f-body);
+  font-weight:400;
+  font-size:var(--lt-size-body);
+  line-height:1.55;
+  color:var(--lt-muted);
+}
+
+/* ==========================================================================
+   GLOW — atmosfera (bloco de luz borrado, sangrando por uma borda)
+   ========================================================================== */
+.lt-glow{
+  position:absolute;
+  border-radius:50%;
+  filter:blur(min(10vw,120px));
+  opacity:var(--lt-glow-opacity);
+  pointer-events:none;
+  z-index:0;
+}
+/* --lt-glow-a/-b (não --lt-lime/--lt-green diretamente): o glow precisa de
+   um matiz mais pastel no light para não virar uma mancha escura — dissociado
+   do accent de texto, que no light precisa ser escuro por contraste. */
+.lt-glow.lime{ background:var(--lt-glow-a); }
+.lt-glow.green{ background:var(--lt-glow-b); }
+
+/* Container de página deve ter position:relative + overflow:hidden
+   para os glows não vazarem o layout. */
+.lt-section{
+  position:relative;
+  overflow:hidden;
+  isolation:isolate;
+}
+
+/* ==========================================================================
+   CARD
+   ========================================================================== */
+.lt-card{
+  position:relative;
+  z-index:1;
+  background:var(--lt-card-bg);
+  border:1px solid var(--lt-line);
+  border-radius:var(--lt-radius-card);
+  padding:var(--lt-pad-card);
+}
+.lt-card.accent{
+  background:var(--lt-card-bg-accent);
+  border-color:var(--lt-lime);
+}
+/* Variante de alerta — um card representando risco/bloqueio dentro de um grid.
+   Use no máximo um por grid: se tudo for crítico, nada parece crítico. */
+.lt-card.critical{
+  background:var(--lt-red-bg);
+  border-color:var(--lt-red-line);
+}
+.lt-card.critical h3, .lt-card.critical .lt-card-title{
+  color:var(--lt-red);
+}
+.lt-card h3, .lt-card .lt-card-title{
+  font-family:var(--lt-f-disp);
+  font-weight:600;
+  font-size:var(--lt-size-card-title);
+  line-height:1.15;
+  letter-spacing:-.01em;
+  color:var(--lt-lime);
+  margin:0 0 .75rem;
+}
+.lt-card p{ margin:0; }
+.lt-card .lt-tagline{
+  margin-top:1.1rem;
+  font-family:var(--lt-f-body);
+  font-weight:700;
+  font-size:.75rem;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:var(--lt-lime);
+  opacity:var(--lt-tagline-opacity);
+}
+
+.lt-grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:var(--lt-gap-grid); }
+.lt-grid-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:var(--lt-gap-grid); }
+@media (max-width: 860px){
+  .lt-grid-2, .lt-grid-3{ grid-template-columns:1fr; }
+}
+
+/* ==========================================================================
+   LINHA NUMERADA (agenda / passos sequenciais)
+   ========================================================================== */
+.lt-num-row{
+  display:grid;
+  grid-template-columns:3.5rem 1fr;
+  gap:1.5rem;
+  align-items:start;
+  padding:1.5rem 0;
+  border-bottom:1px solid var(--lt-line);
+}
+.lt-num-row:last-child{ border-bottom:none; }
+.lt-num{
+  font-family:var(--lt-f-disp);
+  font-weight:700;
+  font-size:var(--lt-size-num);
+  line-height:.9;
+  color:var(--lt-lime);
+}
+.lt-num-row h4{
+  font-family:var(--lt-f-disp);
+  font-weight:600;
+  font-size:1.4rem;
+  color:var(--lt-text);
+  margin:0 0 .4rem;
+}
+.lt-num-row p{ margin:0; color:var(--lt-muted); }
+
+/* ==========================================================================
+   LISTA COM MARCADOR (bullets declarativos)
+   ========================================================================== */
+.lt-blist{ display:flex; flex-direction:column; gap:1.1rem; }
+.lt-brow{ display:flex; gap:1rem; align-items:flex-start; }
+.lt-bdot{
+  width:.65rem; height:.65rem; border-radius:50%;
+  background:var(--lt-lime); margin-top:.55rem; flex-shrink:0;
+}
+.lt-brow p{
+  font-family:var(--lt-f-body); font-size:1.15rem; line-height:1.5;
+  color:var(--lt-text); margin:0;
+}
+
+.lt-kicker{
+  margin-top:1.75rem; padding-top:1.4rem;
+  border-top:1px solid var(--lt-line);
+  font-family:var(--lt-f-disp); font-weight:500;
+  font-size:1.4rem; line-height:1.4; color:var(--lt-lime);
+}
+
+/* ==========================================================================
+   PULLQUOTE (callout de destaque)
+   ========================================================================== */
+.lt-pullquote{
+  background:var(--lt-pullquote-bg);
+  border-left:5px solid var(--lt-lime);
+  border-radius:0 14px 14px 0;
+  padding:1.6rem 2rem;
+}
+.lt-pullquote p{
+  font-family:var(--lt-f-disp); font-weight:500;
+  font-size:var(--lt-size-quote); line-height:1.32;
+  color:var(--lt-pullquote-text); margin:0;
+}
+.lt-pullquote .lt-cite{
+  display:block; margin-top:.9rem;
+  font-family:var(--lt-f-body); font-size:1rem; color:var(--lt-muted);
+}
+
+/* ==========================================================================
+   ALERT BLOCK — callout de risco/aviso crítico (espelha o pullquote, em vermelho)
+   Reservar para conteúdo genuinamente crítico. No máximo um por seção.
+   ========================================================================== */
+.lt-alert{
+  background:var(--lt-red-bg);
+  border-left:4px solid var(--lt-red);
+  border-radius:0 12px 12px 0;
+  padding:1.4rem 1.75rem;
+}
+.lt-alert p{
+  font-family:var(--lt-f-body); font-weight:500;
+  font-size:1.05rem; line-height:1.55;
+  color:var(--lt-red-soft); margin:0;
+}
+.lt-alert strong{ color:var(--lt-red); font-weight:700; }
+
+/* ==========================================================================
+   BLOCO VERBATIM (prompt / código) — mais escuro que o fundo (recesso)
+   ========================================================================== */
+.lt-prompt{
+  background:var(--lt-prompt-bg);
+  border:1px solid var(--lt-line);
+  border-radius:var(--lt-radius-prompt);
+  padding:1.6rem 1.8rem;
+  font-family:var(--lt-f-mono);
+  font-size:var(--lt-size-mono);
+  line-height:1.72;
+  color:var(--lt-lime-soft);
+  white-space:pre-wrap;
+  overflow-x:auto;
+}
+.lt-prompt b{ color:var(--lt-yellow); font-weight:500; }
+
+/* ==========================================================================
+   TABELA
+   ========================================================================== */
+.lt-table{ width:100%; border-collapse:collapse; }
+.lt-table thead th{
+  font-family:var(--lt-f-body); font-weight:700;
+  font-size:.75rem; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--lt-lime); text-align:left;
+  padding:0 1rem 1rem 0; border-bottom:1px solid var(--lt-line);
+}
+.lt-table tbody td{
+  padding:1.2rem 1rem 1.2rem 0;
+  border-bottom:1px solid var(--lt-line-soft);
+  vertical-align:top;
+  font-family:var(--lt-f-body); font-size:1rem; color:var(--lt-muted);
+}
+.lt-table tbody tr.hl td{ background:var(--lt-card-bg-accent); }
+.lt-table tbody tr.hl td:first-child{ border-radius:12px 0 0 12px; padding-left:1rem; }
+.lt-table tbody tr.hl td:last-child{ border-radius:0 12px 12px 0; }
+.lt-table .lt-tool{ font-family:var(--lt-f-disp); font-weight:600; font-size:1.15rem; color:var(--lt-text); }
+.lt-table tbody tr.hl .lt-tool{ color:var(--lt-lime); }
+/* Variante de alerta — linha sinalizada como risco alto / não conforme */
+.lt-table tbody tr.critical td{ background:var(--lt-red-bg); }
+.lt-table tbody tr.critical td:first-child{ border-radius:12px 0 0 12px; padding-left:1rem; }
+.lt-table tbody tr.critical td:last-child{ border-radius:0 12px 12px 0; }
+.lt-table tbody tr.critical .lt-tool{ color:var(--lt-red); }
+
+/* Tabela responsiva: em telas estreitas vira cartões empilhados */
+@media (max-width: 720px){
+  .lt-table thead{ display:none; }
+  .lt-table, .lt-table tbody, .lt-table tr, .lt-table td{ display:block; width:100%; }
+  .lt-table tr{ border-bottom:1px solid var(--lt-line); padding:1rem 0; }
+  .lt-table td{ border:none; padding:.3rem 0; }
+}
+
+/* ==========================================================================
+   BOTÕES (extensão para uso em site — não existiam no deck)
+   ========================================================================== */
+.lt-btn{
+  display:inline-flex; align-items:center; gap:.5rem;
+  font-family:var(--lt-f-body); font-weight:700;
+  font-size:.9375rem; letter-spacing:.02em;
+  padding:.85rem 1.6rem; border-radius:999px;
+  border:1px solid transparent; cursor:pointer;
+  transition:opacity .2s ease, transform .2s ease;
+  text-decoration:none;
+}
+.lt-btn:hover{ opacity:.88; transform:translateY(-1px); }
+.lt-btn-primary{ background:var(--lt-lime); color:var(--lt-on-accent); }
+.lt-btn-ghost{ background:transparent; color:var(--lt-lime); border-color:var(--lt-line); }
+
+/* ==========================================================================
+   PÁGINA / RODAPÉ MONO
+   ========================================================================== */
+.lt-mono-meta{
+  font-family:var(--lt-f-mono); font-size:var(--lt-size-pagenum);
+  color:var(--lt-muted); letter-spacing:.06em;
+}

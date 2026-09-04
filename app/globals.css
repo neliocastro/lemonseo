@@ -1,0 +1,393 @@
+@import "tailwindcss";
+@import "./styles/lemon-tech.css";
+
+/* Fontes carregadas via next/font (self-hosted) em vez do <link> do Google Fonts
+   sugerido pela skill — apontamos os tokens lt-f-* para as variáveis do next/font. */
+:root {
+  --lt-f-disp: var(--font-funnel-display), sans-serif;
+  --lt-f-body: var(--font-manrope), sans-serif;
+  --lt-f-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+}
+
+/* ==========================================================================
+   LemonSEO — estilos de produto em cima do design system Lemon Tech.
+   Não redefine tokens; só adiciona componentes que o kit base não cobre
+   (formulário, tela de progresso, anel de nota, abas, botão de WhatsApp).
+   ========================================================================== */
+
+html, body {
+  height: 100%;
+}
+
+body.lt-theme {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: inherit;
+}
+
+/* ---------- Header ---------- */
+.ls-header {
+  border-bottom: 1px solid var(--lt-line-soft);
+  padding: 1.1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  position: sticky;
+  top: 0;
+  background: color-mix(in srgb, var(--lt-slate) 88%, transparent);
+  backdrop-filter: blur(10px);
+  z-index: 20;
+}
+.ls-header-logo {
+  font-family: var(--lt-f-disp);
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--lt-text);
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  text-decoration: none;
+}
+.ls-header-site {
+  margin-left: auto;
+  font-family: var(--lt-f-mono);
+  font-size: .78rem;
+  color: var(--lt-muted);
+  border: 1px solid var(--lt-line);
+  border-radius: 999px;
+  padding: .35rem .8rem;
+}
+
+/* ---------- Landing hero ---------- */
+.ls-hero {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  padding: clamp(3rem, 6vw, 6rem) 1.5rem clamp(2.5rem, 5vw, 4rem);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.ls-hero-sub {
+  margin: 1.1rem auto 2.5rem;
+}
+
+/* ---------- Form card ---------- */
+.ls-form-card {
+  width: 100%;
+  max-width: 560px;
+  text-align: left;
+}
+.ls-field { margin-bottom: 1.1rem; }
+.ls-field label {
+  display: block;
+  font-family: var(--lt-f-body);
+  font-weight: 700;
+  font-size: .82rem;
+  color: var(--lt-text);
+  margin-bottom: .5rem;
+}
+.ls-field .ls-badge-new {
+  background: var(--lt-red);
+  color: var(--lt-on-alert);
+  font-size: .62rem;
+  font-weight: 700;
+  padding: .15rem .45rem;
+  border-radius: 999px;
+  margin-left: .4rem;
+  vertical-align: middle;
+  letter-spacing: .04em;
+}
+.ls-field input {
+  width: 100%;
+  border: 1px solid var(--lt-line);
+  border-radius: 10px;
+  background: var(--lt-ink-2);
+  color: var(--lt-text);
+  padding: .85rem 1rem;
+  font-family: var(--lt-f-body);
+  font-size: .95rem;
+  outline: none;
+  transition: border-color .2s ease;
+}
+[data-theme="light"] .ls-field input {
+  background: var(--lt-white);
+}
+.ls-field input::placeholder { color: var(--lt-muted); }
+.ls-field input:focus { border-color: var(--lt-lime); }
+.ls-field .ls-hint {
+  font-size: .74rem;
+  color: var(--lt-muted);
+  margin-top: .4rem;
+}
+.ls-submit {
+  width: 100%;
+  justify-content: center;
+  font-size: 1rem;
+  padding: 1rem 1.5rem;
+}
+
+/* ---------- Feature chips ---------- */
+.ls-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: .85rem;
+  max-width: 780px;
+  width: 100%;
+  margin-top: 2.5rem;
+}
+.ls-feature {
+  text-align: center;
+  padding: 1.1rem .9rem;
+}
+.ls-feature-icon { font-size: 1.6rem; margin-bottom: .5rem; }
+.ls-feature-name { font-weight: 700; font-size: .85rem; color: var(--lt-text); margin-bottom: .2rem; }
+.ls-feature-desc { font-size: .74rem; color: var(--lt-muted); }
+
+/* ---------- Progress screen ---------- */
+.ls-progress-wrap {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+}
+.ls-progress-card {
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+}
+.ls-progress-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--lt-line-soft);
+  overflow: hidden;
+  margin: 1.25rem 0 .75rem;
+}
+.ls-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--lt-glow-b), var(--lt-lime));
+  border-radius: 999px;
+  transition: width .4s ease;
+}
+.ls-step {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .5rem 0;
+  font-size: .85rem;
+  color: var(--lt-muted);
+  text-align: left;
+}
+.ls-step.done { color: var(--lt-lime); }
+.ls-step.active { color: var(--lt-text); font-weight: 600; }
+.ls-step-icon { width: 1.1rem; text-align: center; flex-shrink: 0; }
+
+/* ---------- Score ring ---------- */
+.ls-score-ring {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.ls-score-ring .ls-score-num {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: var(--lt-f-disp);
+}
+.ls-score-ring .ls-score-num .n { font-size: 1.9rem; font-weight: 700; color: var(--lt-text); line-height: 1; }
+.ls-score-ring .ls-score-num .d { font-size: .7rem; color: var(--lt-muted); }
+.ls-score-ring.low .ls-score-num .n { color: var(--lt-red); }
+
+/* ---------- Hero de resultado ---------- */
+.ls-result-hero {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2rem;
+  align-items: center;
+}
+@media (max-width: 720px) {
+  .ls-result-hero { grid-template-columns: 1fr; text-align: center; justify-items: center; }
+}
+.ls-result-url {
+  font-family: var(--lt-f-mono);
+  font-size: .85rem;
+  color: var(--lt-muted);
+  word-break: break-all;
+}
+
+/* ---------- Ações ---------- */
+.ls-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+  margin: 1.75rem 0;
+}
+
+/* ---------- Grade de métricas ---------- */
+.ls-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.ls-metric-card {
+  text-align: center;
+  padding: 1.5rem 1rem;
+}
+.ls-metric-icon { font-size: 1.4rem; margin-bottom: .35rem; }
+.ls-metric-label { font-weight: 700; font-size: .82rem; color: var(--lt-text); margin-bottom: .75rem; }
+.ls-metric-detail { font-size: .74rem; color: var(--lt-muted); margin-top: .6rem; }
+
+/* ---------- Tabs ---------- */
+.ls-tabs-nav {
+  display: flex;
+  gap: .4rem;
+  overflow-x: auto;
+  padding-bottom: .5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--lt-line-soft);
+}
+.ls-tab-btn {
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  color: var(--lt-muted);
+  font-family: var(--lt-f-body);
+  font-weight: 600;
+  font-size: .85rem;
+  padding: .6rem 1rem;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .2s ease, color .2s ease;
+}
+.ls-tab-btn:hover { color: var(--lt-text); }
+.ls-tab-btn.active { background: var(--lt-lime); color: var(--lt-on-accent); }
+
+/* ---------- Lista de problemas ---------- */
+.ls-problem-counters {
+  display: flex;
+  gap: .6rem;
+  flex-wrap: wrap;
+  margin: 1rem 0 1.5rem;
+}
+.ls-problem-group-title {
+  font-family: var(--lt-f-disp);
+  font-weight: 600;
+  font-size: 1rem;
+  margin: 1.5rem 0 .75rem;
+}
+.ls-problem-item {
+  display: flex;
+  gap: .85rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--lt-line-soft);
+}
+.ls-problem-item:last-child { border-bottom: none; }
+.ls-problem-icon { font-size: 1.1rem; flex-shrink: 0; }
+.ls-problem-cat {
+  font-size: .7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--lt-lime);
+  margin-bottom: .2rem;
+}
+.ls-problem-title { font-weight: 600; color: var(--lt-text); margin-bottom: .3rem; }
+.ls-problem-impact { font-size: .82rem; color: var(--lt-muted); line-height: 1.5; }
+
+/* ---------- CTA final ---------- */
+.ls-cta-final {
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+  margin-top: 2rem;
+}
+.ls-cta-final .lt-card { max-width: 640px; margin: 0 auto; }
+
+/* ---------- WhatsApp flutuante ---------- */
+.ls-wpp-float {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #25D366;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow: none;
+  border: 1px solid var(--lt-line);
+  z-index: 30;
+  text-decoration: none;
+}
+.ls-wpp-float:hover { opacity: .9; }
+
+/* ---------- Modal ---------- */
+.ls-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  z-index: 50;
+}
+.ls-modal {
+  background: var(--lt-slate);
+  border: 1px solid var(--lt-line);
+  border-radius: var(--lt-radius-card);
+  max-width: 460px;
+  width: 100%;
+  padding: 2rem;
+  position: relative;
+  text-align: center;
+}
+.ls-modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: transparent;
+  border: none;
+  color: var(--lt-muted);
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+
+/* ---------- Footer ---------- */
+.ls-footer {
+  border-top: 1px solid var(--lt-line-soft);
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  margin-top: auto;
+}
+.ls-footer p { font-size: .8rem; color: var(--lt-muted); margin: .3rem 0; }
+.ls-footer a { color: var(--lt-muted); text-decoration: underline; }
+.ls-footer .ls-footer-links {
+  display: flex;
+  gap: .8rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: .6rem;
+  font-size: .74rem;
+}
+
+.ls-error-box {
+  max-width: 480px;
+  margin: 3rem auto;
+  text-align: center;
+}
