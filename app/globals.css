@@ -231,23 +231,75 @@ a {
 .ls-score-ring.low .ls-score-num .n { color: var(--lt-red); }
 
 /* ---------- Hero de resultado ---------- */
-.ls-result-hero {
+.ls-hero-card { overflow: visible; }
+.ls-hero-grid {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto 1fr auto;
   gap: 2rem;
-  align-items: center;
+  align-items: start;
 }
-.ls-result-hero > div {
-  min-width: 0;
-}
-@media (max-width: 720px) {
-  .ls-result-hero { grid-template-columns: 1fr; text-align: center; justify-items: center; }
+.ls-hero-main { min-width: 0; }
+@media (max-width: 900px) {
+  .ls-hero-grid { grid-template-columns: 1fr; text-align: center; justify-items: center; }
+  .ls-hero-failures-list { text-align: left; }
+  .ls-hero-meta-badges { justify-content: center; }
 }
 .ls-result-url {
   font-family: var(--lt-f-mono);
   font-size: .85rem;
   color: var(--lt-muted);
   word-break: break-all;
+}
+
+.ls-hero-divider { border: none; border-top: 1px solid var(--lt-line-soft); margin: 1.1rem 0; }
+.ls-hero-failures-title {
+  font-size: .72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--lt-lime);
+  margin-bottom: .75rem;
+}
+.ls-hero-failures-list { display: flex; flex-direction: column; gap: .55rem; }
+.ls-hero-failures-list li {
+  display: flex;
+  gap: .6rem;
+  align-items: flex-start;
+  font-size: .85rem;
+  color: var(--lt-text);
+  line-height: 1.45;
+}
+.ls-hero-failures-list li span:first-child { flex-shrink: 0; margin-top: .1rem; }
+
+.ls-hero-meta-badges { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1.3rem; }
+.ls-meta-pill {
+  font-family: var(--lt-f-mono);
+  font-size: .72rem;
+  color: var(--lt-muted);
+  border: 1px solid var(--lt-line);
+  border-radius: 999px;
+  padding: .35rem .8rem;
+}
+.ls-hero-footnote {
+  font-size: .76rem;
+  color: var(--lt-muted);
+  margin-top: 1.1rem;
+  line-height: 1.5;
+  max-width: 62ch;
+}
+
+.ls-hero-wpp-card {
+  background: var(--lt-card-bg-accent);
+  border: 1px solid var(--lt-line);
+  border-radius: var(--lt-radius-card);
+  padding: 1.5rem;
+  min-width: 260px;
+  max-width: 300px;
+}
+.ls-hero-wpp-card .lt-eyebrow { font-size: .7rem; }
+.ls-hero-wpp-card .ls-wpp-btn { width: 100%; justify-content: center; }
+@media (max-width: 900px) {
+  .ls-hero-wpp-card { max-width: 100%; width: 100%; }
 }
 
 /* ---------- Ações ---------- */
@@ -257,16 +309,6 @@ a {
   gap: .75rem;
   margin: 1.75rem 0;
 }
-
-/* ---------- Banner de atenção (topo do resultado) ---------- */
-.ls-top-alert {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-}
-.ls-top-alert p { flex: 1 1 320px; }
 
 .ls-benefit-row {
   display: flex;
@@ -459,25 +501,46 @@ a {
 }
 .ls-cta-final .lt-card { max-width: 640px; margin: 0 auto; }
 
-/* ---------- WhatsApp flutuante ---------- */
-.ls-wpp-float {
-  position: fixed;
-  bottom: 1.5rem;
-  right: 1.5rem;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: #25D366;
-  display: flex;
+/* ---------- Botão de WhatsApp (CTA) ----------
+   Verde de marca do WhatsApp é intencional aqui (sinal de reconhecimento,
+   não decorativo) — foge do accent único do Lemon Tech pelo mesmo motivo
+   que os badges/prompt-block do kit já são theme-invariant. O "brilho" é
+   feito com gradiente radial desfocado, não box-shadow, seguindo a regra
+   do design system de nunca usar box-shadow. */
+.ls-wpp-btn {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
+  gap: .65rem;
+  background: linear-gradient(135deg, #2CE571, #1DAE52);
   color: #fff;
-  box-shadow: none;
-  border: 1px solid var(--lt-line);
-  z-index: 30;
+  font-family: var(--lt-f-body);
+  font-weight: 700;
+  font-size: .95rem;
+  padding: .9rem 1.9rem;
+  border-radius: 999px;
   text-decoration: none;
+  border: none;
+  transition: transform .2s ease;
 }
-.ls-wpp-float:hover { opacity: .9; }
+.ls-wpp-btn::before {
+  content: "";
+  position: absolute;
+  inset: -16px;
+  z-index: -1;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(44, 229, 113, .45), transparent 70%);
+  filter: blur(16px);
+}
+.ls-wpp-btn:hover { transform: translateY(-1px); }
+.ls-wpp-btn svg { flex-shrink: 0; }
+
+/* ---------- Aviso sobre o escopo da análise ---------- */
+.ls-disclaimer {
+  margin-top: 1.5rem;
+  background: var(--lt-card-bg);
+}
 
 /* ---------- Modal ---------- */
 .ls-modal-backdrop {

@@ -7,7 +7,7 @@ import { ScoreRing } from "./ScoreRing";
 import { ScoreBar } from "./ScoreBar";
 import { StatusCard } from "./StatusCard";
 import { EmailModal } from "./EmailModal";
-import { WhatsAppFloatButton, WhatsAppCtaButton } from "./WhatsAppButton";
+import { WhatsAppCtaButton } from "./WhatsAppButton";
 
 const SEVERITY_LABEL: Record<Severity, { icon: string; label: string }> = {
   alto: { icon: "🔴", label: "Alto impacto" },
@@ -20,6 +20,13 @@ function heroMessage(score: number): string {
   if (score >= 6) return "No caminho certo, mas há pontos importantes para corrigir.";
   if (score >= 4) return "Seu site tem problemas que provavelmente afetam seu tráfego orgânico.";
   return "Seu site tem problemas críticos que estão custando visitas e clientes.";
+}
+
+function formatReportDate(iso: string): string {
+  const d = new Date(iso);
+  const date = d.toLocaleDateString("pt-BR");
+  const time = d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  return `${date} às ${time}`;
 }
 
 function formatBytes(bytes: number): string {
@@ -132,27 +139,59 @@ export function ResultView({ report }: { report: AnalysisReport }) {
 
   return (
     <div className="ls-result-wrap" style={{ maxWidth: 1000, margin: "0 auto", padding: "2rem 1.5rem" }}>
-      {alto.length > 0 && (
-        <div className="lt-alert ls-top-alert" style={{ marginBottom: "1.5rem" }}>
-          <p>
-            <strong>⚠️ Atenção:</strong> encontramos <strong>{alto.length} problema(s) de alto impacto</strong> que
-            provavelmente estão prejudicando seu tráfego orgânico no Google.
-          </p>
-          <WhatsAppCtaButton site={report.finalUrl} slug={report.slug} />
-        </div>
-      )}
+      <div className="lt-card ls-hero-card" style={{ marginBottom: "1.5rem" }}>
+        <div className="ls-hero-grid">
+          <ScoreRing score={report.overallScore} size={130} />
 
-      <div className="lt-card ls-result-hero" style={{ marginBottom: "1.5rem" }}>
-        <ScoreRing score={report.overallScore} size={130} />
-        <div>
-          <div className="ls-result-url">{report.finalUrl}</div>
-          <h2 className="lt-title-sm" style={{ marginTop: ".4rem" }}>
-            {heroMessage(report.overallScore)}
-          </h2>
-          <p className="lt-body" style={{ fontSize: ".82rem", marginTop: ".6rem" }}>
-            A nota geral considera, de forma conjunta, Velocidade, SEO, Mobile, Imagens, GEO,
-            E-E-A-T, Subpáginas e Analytics.
-          </p>
+          <div className="ls-hero-main">
+            <div className="ls-result-url">{report.finalUrl}</div>
+            <h2 className="lt-title-sm" style={{ marginTop: ".4rem" }}>
+              {alto.length > 0
+                ? "🚨 Atenção: identificamos falhas que podem prejudicar seu tráfego no Google e a citação do site por IAs como ChatGPT, Gemini e Copilot."
+                : heroMessage(report.overallScore)}
+            </h2>
+
+            {report.problems.length > 0 && (
+              <>
+                <hr className="ls-hero-divider" />
+                <div className="ls-hero-failures-title">Principais falhas no site</div>
+                <ul className="ls-hero-failures-list">
+                  {report.problems.slice(0, 6).map((p, i) => (
+                    <li key={i}>
+                      <span>{SEVERITY_LABEL[p.severidade].icon}</span>
+                      <span>
+                        <strong>{p.categoria}:</strong> {p.titulo}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+
+            <div className="ls-hero-meta-badges">
+              <span className="ls-meta-pill">📅 {formatReportDate(report.createdAt)}</span>
+              <span className="ls-meta-pill">📑 {report.subpages.length} subpágina(s)</span>
+              {report.keyword && <span className="ls-meta-pill">🔑 {report.keyword}</span>}
+            </div>
+
+            <p className="ls-hero-footnote">
+              A nota geral representa uma média dos principais fatores analisados no site. Ela
+              considera, de forma conjunta, Velocidade, SEO, Mobile, Imagens, GEO, E-E-A-T,
+              Subpáginas e Analytics.
+            </p>
+          </div>
+
+          <div className="ls-hero-wpp-card">
+            <span className="lt-eyebrow">⚡ Diagnóstico WhatsApp</span>
+            <h3 className="lt-title-sm" style={{ fontSize: "1.15rem", marginTop: ".5rem" }}>
+              {alto.length > 0 ? "Corrija as falhas e atinja nota 10" : "Quer chegar à nota 10?"}
+            </h3>
+            <p className="lt-body" style={{ fontSize: ".82rem", margin: ".6rem 0 1.1rem" }}>
+              Fale com nossos especialistas e solicite um orçamento sem compromisso para que
+              nossa equipe realize todas as correções necessárias no seu site.
+            </p>
+            <WhatsAppCtaButton site={report.finalUrl} slug={report.slug} label="Falar no WhatsApp" />
+          </div>
         </div>
       </div>
 
@@ -640,7 +679,17 @@ export function ResultView({ report }: { report: AnalysisReport }) {
         </div>
       </div>
 
-      <WhatsAppFloatButton site={report.finalUrl} slug={report.slug} />
+      <div className="lt-card ls-disclaimer">
+        <h3 style={{ fontSize: "1rem" }}>⚠️ Por que essa análise vai além do PageSpeed Insights?</h3>
+        <p className="lt-body" style={{ marginTop: ".6rem", fontSize: ".85rem" }}>
+          Além da página inicial, avaliamos subpáginas, SEO, GEO, E-E-A-T e outros critérios
+          técnicos e de conteúdo. Alguns desses fatores são recentes, acompanhando a evolução da
+          busca e das IAs — por isso, um ponto de melhoria aqui não significa que o site foi
+          desenvolvido de forma errada, apenas que há espaço para evoluir. Use este relatório
+          como um guia prático para orientar sua equipe de desenvolvimento.
+        </p>
+      </div>
+
       {showEmailModal && <EmailModal slug={report.slug} onClose={() => setShowEmailModal(false)} />}
     </div>
   );
