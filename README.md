@@ -25,6 +25,9 @@ Copie `.env.example` para `.env.local` e preencha o que tiver disponível:
   fetch como fallback em vez dos dados reais do Google PageSpeed Insights.
 - `NEXT_PUBLIC_WHATSAPP_NUMBER` — número usado nos botões de WhatsApp (CTA final e flutuante).
 - `ADMIN_PASSWORD` — obrigatória para usar o painel `/admin` (ver seção abaixo).
+- `DATABASE_URL` — conexão Postgres (Neon). Sem ela, cai no fallback em JSON local (ver
+  "Persistência" abaixo). Em produção na Vercel já vem configurada automaticamente pela
+  integração do Neon.
 
 ## Como funciona
 
@@ -39,14 +42,15 @@ Copie `.env.example` para `.env.local` e preencha o que tiver disponível:
 3. Qualquer contato feito na tela de resultado (e-mail no modal, clique no WhatsApp) é
    registrado via `POST /api/lead`.
 
-## Persistência (MVP)
+## Persistência
 
-Por padrão os relatórios e leads ficam em `data/reports.json` e `data/leads.json`
-(`lib/store.ts`) — funciona bem em desenvolvimento, mas é efêmero em produção na Vercel
-(filesystem de serverless functions não é persistente entre execuções). Antes de ir para
-produção, troque `lib/store.ts` por um banco gerenciado (Neon ou Vercel Postgres), mantendo a
-mesma interface de funções (`saveReport`, `getReport`, `saveLead`, `listLeads`,
-`listReports`) — os outros arquivos não precisam mudar.
+`lib/store.ts` usa **Postgres (Neon)** via `DATABASE_URL` quando a variável está definida —
+é o caso em produção na Vercel (instalado como integração de marketplace: `vercel integration
+add neon`). Duas tabelas simples (`reports`, `leads`) guardam o relatório/lead inteiro como
+JSONB, sem ORM. Sem `DATABASE_URL` (ex: rodando local sem configurar o banco), cai para um
+fallback em `data/reports.json` e `data/leads.json` só para não travar o desenvolvimento —
+esse fallback é efêmero em produção (filesystem de serverless functions não persiste entre
+execuções) e não deve ser usado ali.
 
 ## Painel /admin
 
@@ -66,9 +70,16 @@ tela de progresso, anel de nota, abas, cards de métrica, botão de WhatsApp, mo
 `app/globals.css`, construídos em cima das classes `.lt-*` do kit base — veja
 `~/.claude/skills/lemon-tech/demo.html` como referência de uso.
 
+## Deploy
+
+Em produção: **https://lemonseo.vercel.app** (projeto `nelio-castros-projects/lemonseo` na
+Vercel, banco Neon Postgres conectado via integração de marketplace). `vercel git connect`
+para deploy automático a cada push ainda não foi possível via CLI (a Vercel pediu para
+autorizar a GitHub App manualmente) — configurar isso no dashboard da Vercel se quiser esse
+fluxo; por enquanto o deploy é feito rodando `vercel --prod` neste diretório.
+
 ## Próximos passos (fora do escopo deste MVP)
 
-- Banco de dados real (Neon/Vercel Postgres) no lugar do JSON local.
 - E-mail transacional (Resend) para o modal "Receber por e-mail" e notificação de novo lead.
 - Rate limiting / proteção contra abuso (Cloudflare Turnstile) no formulário público.
 - Exportação de PDF de verdade (hoje usa `window.print()`).

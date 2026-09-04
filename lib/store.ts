@@ -1,18 +1,8 @@
+import { neon } from "@neondatabase/serverless";
 import { promises as fs } from "fs";
+import os from "os";
 import path from "path";
 import type { AnalysisReport } from "./types";
-
-/**
- * MVP: persistência em JSON local (data/reports.json, data/leads.json).
- * Funciona em `next dev` e num único processo de servidor.
- * Em produção na Vercel (serverless, filesystem efêmero) troque por
- * Postgres (Neon/Vercel Postgres) mantendo a mesma interface abaixo —
- * ver plano em ~/.claude/plans/analise-essa-pasta-seo-fluttering-fairy.md.
- */
-
-const DATA_DIR = path.join(process.cwd(), "data");
-const REPORTS_FILE = path.join(DATA_DIR, "reports.json");
-const LEADS_FILE = path.join(DATA_DIR, "leads.json");
 
 export interface Lead {
   id: string;
@@ -23,6 +13,110 @@ export interface Lead {
   createdAt: string;
 }
 
+/**
+ * Persistência: Postgres (Neon) quando DATABASE_URL está configurada —
+ * é o caso em produção na Vercel. Sem essa variável (ex: `next dev` sem
+ * `.env.local` preenchido), cai para JSON local em `data/`, só para não
+ * travar o desenvolvimento antes de configurar o banco.
+ */
+
+const sql = process.env.DATABASE_URL ? neon(process.env.DATABASE_URL) : null;
+
+let schemaReady: Promise<void> | null = null;
+
+function ensureSchema(): Promise<void> {
+  if (!sql) return Promise.resolve();
+  if (!schemaReady) {
+    schemaReady = (async () => {
+      await sql`
+        CREATE TABLE IF NOT EXISTS reports (
+          slug TEXT PRIMARY KEY,
+          data JSONB NOT NULL,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        )
+      `;
+      await sql`
+        CREATE TABLE IF NOT EXISTS leads (
+          id TEXT PRIMARY KEY,
+          report_slug TEXT NOT NULL,
+          data JSONB NOT NULL,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        )
+      `;
+    })();
+  }
+  return schemaReady;
+}
+
+export async function saveReport(report: AnalysisReport): Promise<void> {
+  if (sql) {
+    await ensureSchema();
+    await sql`
+      INSERT INTO reports (slug, data, created_at)
+      VALUES (${report.slug}, ${JSON.stringify(report)}, ${report.createdAt})
+      ON CONFLICT (slug) DO UPDATE SET data = EXCLUDED.data
+    `;
+    return;
+  }
+  const all = await readJsonFile<Record<string, AnalysisReport>>(REPORTS_FILE, {});
+  all[report.slug] = report;
+  await writeJsonFile(REPORTS_FILE, all);
+}
+
+export async function getReport(slug: string): Promise<AnalysisReport | null> {
+  if (sql) {
+    await ensureSchema();
+    const rows = await sql`SELECT data FROM reports WHERE slug = ${slug}`;
+    return (rows[0]?.data as AnalysisReport) ?? null;
+  }
+  const all = await readJsonFile<Record<string, AnalysisReport>>(REPORTS_FILE, {});
+  return all[slug] ?? null;
+}
+
+export async function saveLead(lead: Lead): Promise<void> {
+  if (sql) {
+    await ensureSchema();
+    await sql`
+      INSERT INTO leads (id, report_slug, data, created_at)
+      VALUES (${lead.id}, ${lead.reportSlug}, ${JSON.stringify(lead)}, ${lead.createdAt})
+      ON CONFLICT (id) DO NOTHING
+    `;
+    return;
+  }
+  const all = await readJsonFile<Lead[]>(LEADS_FILE, []);
+  all.push(lead);
+  await writeJsonFile(LEADS_FILE, all);
+}
+
+export async function listLeads(): Promise<Lead[]> {
+  if (sql) {
+    await ensureSchema();
+    const rows = await sql`SELECT data FROM leads ORDER BY created_at DESC`;
+    return rows.map((r) => r.data as Lead);
+  }
+  return readJsonFile<Lead[]>(LEADS_FILE, []);
+}
+
+export async function listReports(): Promise<AnalysisReport[]> {
+  if (sql) {
+    await ensureSchema();
+    const rows = await sql`SELECT data FROM reports ORDER BY created_at DESC`;
+    return rows.map((r) => r.data as AnalysisReport);
+  }
+  const all = await readJsonFile<Record<string, AnalysisReport>>(REPORTS_FILE, {});
+  return Object.values(all).sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+}
+
+// --- Fallback em JSON local (apenas quando DATABASE_URL não está definida) ---
+
+const DATA_DIR = process.env.VERCEL
+  ? path.join(os.tmpdir(), "lemonseo-data")
+  : path.join(process.cwd(), "data");
+const REPORTS_FILE = path.join(DATA_DIR, "reports.json");
+const LEADS_FILE = path.join(DATA_DIR, "leads.json");
+
 async function ensureFile(file: string, initial: string) {
   await fs.mkdir(DATA_DIR, { recursive: true });
   try {
@@ -32,7 +126,7 @@ async function ensureFile(file: string, initial: string) {
   }
 }
 
-async function readJson<T>(file: string, initial: T): Promise<T> {
+async function readJsonFile<T>(file: string, initial: T): Promise<T> {
   await ensureFile(file, JSON.stringify(initial));
   const raw = await fs.readFile(file, "utf-8");
   try {
@@ -42,35 +136,7 @@ async function readJson<T>(file: string, initial: T): Promise<T> {
   }
 }
 
-async function writeJson<T>(file: string, data: T) {
+async function writeJsonFile<T>(file: string, data: T) {
   await fs.mkdir(DATA_DIR, { recursive: true });
   await fs.writeFile(file, JSON.stringify(data, null, 2), "utf-8");
-}
-
-export async function saveReport(report: AnalysisReport): Promise<void> {
-  const all = await readJson<Record<string, AnalysisReport>>(REPORTS_FILE, {});
-  all[report.slug] = report;
-  await writeJson(REPORTS_FILE, all);
-}
-
-export async function getReport(slug: string): Promise<AnalysisReport | null> {
-  const all = await readJson<Record<string, AnalysisReport>>(REPORTS_FILE, {});
-  return all[slug] ?? null;
-}
-
-export async function saveLead(lead: Lead): Promise<void> {
-  const all = await readJson<Lead[]>(LEADS_FILE, []);
-  all.push(lead);
-  await writeJson(LEADS_FILE, all);
-}
-
-export async function listLeads(): Promise<Lead[]> {
-  return readJson<Lead[]>(LEADS_FILE, []);
-}
-
-export async function listReports(): Promise<AnalysisReport[]> {
-  const all = await readJson<Record<string, AnalysisReport>>(REPORTS_FILE, {});
-  return Object.values(all).sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
 }
