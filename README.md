@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🍋 LemonSEO
 
-## Getting Started
+Analise seu site em segundos: Velocidade, SEO, Mobile, Imagens, Subpáginas e Analytics —
+relatório completo em linguagem simples. MVP construído com Next.js (App Router) +
+TypeScript, estilizado com o design system **Lemon Tech**.
 
-First, run the development server:
+Ver o plano completo do produto em
+`~/.claude/plans/analise-essa-pasta-seo-fluttering-fairy.md`.
+
+## Rodando localmente
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abra [http://localhost:3000](http://localhost:3000) (ou a porta configurada).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Variáveis de ambiente
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Copie `.env.example` para `.env.local` e preencha o que tiver disponível:
 
-## Learn More
+- `PAGESPEED_API_KEY` — opcional. Sem ela, a nota de Velocidade usa o tempo de resposta do
+  fetch como fallback em vez dos dados reais do Google PageSpeed Insights.
+- `NEXT_PUBLIC_WHATSAPP_NUMBER` — número usado nos botões de WhatsApp (CTA final e flutuante).
+- `ADMIN_PASSWORD` — obrigatória para usar o painel `/admin` (ver seção abaixo).
 
-To learn more about Next.js, take a look at the following resources:
+## Como funciona
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. `POST /api/analyze` recebe a URL (+ palavra-chave opcional), busca o HTML do site, roda os
+   analisadores (`lib/analyzers/*`) e o PageSpeed Insights em paralelo, calcula as notas
+   (`lib/scoring.ts`) e salva o relatório.
+2. O usuário é redirecionado para `/analise/[slug]`, que renderiza o relatório salvo — link
+   permanente e compartilhável.
+3. Qualquer contato feito na tela de resultado (e-mail no modal, clique no WhatsApp) é
+   registrado via `POST /api/lead`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Persistência (MVP)
 
-## Deploy on Vercel
+Por padrão os relatórios e leads ficam em `data/reports.json` e `data/leads.json`
+(`lib/store.ts`) — funciona bem em desenvolvimento, mas é efêmero em produção na Vercel
+(filesystem de serverless functions não é persistente entre execuções). Antes de ir para
+produção, troque `lib/store.ts` por um banco gerenciado (Neon ou Vercel Postgres), mantendo a
+mesma interface de funções (`saveReport`, `getReport`, `saveLead`, `listLeads`,
+`listReports`) — os outros arquivos não precisam mudar.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Painel /admin
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`/admin` lista os leads capturados e os relatórios gerados. Protegido por senha única
+(`ADMIN_PASSWORD`) via `proxy.ts` (equivalente ao antigo `middleware.ts` no Next.js 16) — sem
+a variável configurada, o login sempre falha. A sessão é um cookie `httpOnly` assinado
+(HMAC da senha), sem banco de sessão — suficiente para um único usuário administrador; se o
+time crescer, trocar por uma sessão de verdade (ex: NextAuth). O header do admin tem um botão
+para alternar entre os temas claro/escuro do Lemon Tech (`components/ThemeToggle.tsx`),
+persistido em `localStorage`.
+
+## Design system
+
+Os tokens do Lemon Tech estão em `app/styles/lemon-tech.css` (copiados de
+`~/.claude/skills/lemon-tech/tokens.css`). Os componentes específicos do produto (formulário,
+tela de progresso, anel de nota, abas, cards de métrica, botão de WhatsApp, modais) estão em
+`app/globals.css`, construídos em cima das classes `.lt-*` do kit base — veja
+`~/.claude/skills/lemon-tech/demo.html` como referência de uso.
+
+## Próximos passos (fora do escopo deste MVP)
+
+- Banco de dados real (Neon/Vercel Postgres) no lugar do JSON local.
+- E-mail transacional (Resend) para o modal "Receber por e-mail" e notificação de novo lead.
+- Rate limiting / proteção contra abuso (Cloudflare Turnstile) no formulário público.
+- Exportação de PDF de verdade (hoje usa `window.print()`).
+- Abas de GEO, E-E-A-T e Semântica como diferencial de fase 2.
+
+Detalhes completos no plano em `~/.claude/plans/analise-essa-pasta-seo-fluttering-fairy.md`.

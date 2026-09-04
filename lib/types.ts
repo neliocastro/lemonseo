@@ -76,6 +76,7 @@ export interface AnalysisReport {
     source: "pagespeed" | "fetch-timing";
     lcp?: number;
     cls?: number;
+    performanceScore?: number;
   };
   subpages: SubpageResult[];
   analytics: AnalyticsResult;
