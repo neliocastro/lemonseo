@@ -145,7 +145,7 @@ export function ResultView({ report }: { report: AnalysisReport }) {
 
           <div className="ls-hero-main">
             <div className="ls-result-url">{report.finalUrl}</div>
-            <h2 className="lt-title-sm" style={{ marginTop: ".4rem" }}>
+            <h2 className="lt-title-sm ls-hero-headline" style={{ marginTop: ".4rem" }}>
               {alto.length > 0
                 ? "🚨 Atenção: identificamos falhas que podem prejudicar seu tráfego no Google e a citação do site por IAs como ChatGPT, Gemini e Copilot."
                 : heroMessage(report.overallScore)}

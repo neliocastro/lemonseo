@@ -239,6 +239,10 @@ a {
   align-items: start;
 }
 .ls-hero-main { min-width: 0; }
+/* .lt-title-sm usa --lt-size-h3 (até 2.6rem), grande demais para essa
+   manchete de resumo compartilhando espaço com o anel e o card de WhatsApp
+   em telas largas — limitamos o teto aqui sem mexer no token do kit base. */
+.ls-hero-headline { font-size: clamp(1.3rem, 1rem + 1vw, 1.65rem); }
 @media (max-width: 900px) {
   .ls-hero-grid { grid-template-columns: 1fr; text-align: center; justify-items: center; }
   .ls-hero-failures-list { text-align: left; }
