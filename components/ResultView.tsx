@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import type { AnalysisReport, Problem, Severity } from "@/lib/types";
+import type { AnalysisReport, Problem, Severity, SubpageResult } from "@/lib/types";
 import { ScoreRing } from "./ScoreRing";
+import { ScoreBar } from "./ScoreBar";
+import { StatusCard } from "./StatusCard";
 import { EmailModal } from "./EmailModal";
 import { WhatsAppFloatButton, WhatsAppCtaButton } from "./WhatsAppButton";
 
@@ -18,6 +20,12 @@ function heroMessage(score: number): string {
   if (score >= 6) return "No caminho certo, mas há pontos importantes para corrigir.";
   if (score >= 4) return "Seu site tem problemas que provavelmente afetam seu tráfego orgânico.";
   return "Seu site tem problemas críticos que estão custando visitas e clientes.";
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function ProblemGroup({ severity, problems }: { severity: Severity; problems: Problem[] }) {
@@ -42,15 +50,40 @@ function ProblemGroup({ severity, problems }: { severity: Severity; problems: Pr
   );
 }
 
+/** Lista de problemas específicos de uma subpágina, no mesmo padrão usado em scoring.ts. */
+function subpageIssues(page: SubpageResult): string[] {
+  if (!page.ok) return ["Página inacessível"];
+  if (!page.seo) return [];
+  const s = page.seo;
+  const issues: string[] = [];
+  if (!page.title) issues.push("Sem meta title");
+  else if (s.titleLength < 30 || s.titleLength > 65) issues.push(`Título com tamanho inadequado (${s.titleLength}c)`);
+  if (!s.metaDescription) issues.push("Sem meta description");
+  if (s.h1Count === 0) issues.push("Sem H1");
+  else if (s.h1Count > 1) issues.push(`Múltiplos H1 (${s.h1Count})`);
+  if (!s.hasViewport) issues.push("Sem meta viewport");
+  if (s.imagesWithoutAlt > 0) issues.push(`${s.imagesWithoutAlt} imagem(ns) sem ALT`);
+  return issues;
+}
+
+function subpageScore(page: SubpageResult): number {
+  if (!page.ok) return 0;
+  const issues = subpageIssues(page).length;
+  return Math.max(0, 10 - issues * 1.8);
+}
+
 const TABS = [
   { key: "problemas", label: "🚨 Problemas" },
   { key: "velocidade", label: "⚡ Velocidade" },
   { key: "seo", label: "🔍 SEO" },
+  { key: "geo", label: "🤖 GEO" },
+  { key: "eeat", label: "⭐ E-E-A-T" },
   { key: "imagens", label: "🖼️ Imagens" },
   { key: "mobile", label: "📱 Mobile" },
   { key: "analytics", label: "📊 Analytics" },
   { key: "subpaginas", label: "📑 Subpáginas" },
   { key: "keyword", label: "🔑 Palavra-chave" },
+  { key: "semantica", label: "🧠 Semântica" },
 ] as const;
 
 export function ResultView({ report }: { report: AnalysisReport }) {
@@ -69,8 +102,46 @@ export function ResultView({ report }: { report: AnalysisReport }) {
     );
   }
 
+  const { seo, images, mobile, speed, analytics, subpages, geo, eeat, semantics, keywordResult } = report;
+
+  // Decomposição indicativa das notas exibidas nas barras de "pontuação detalhada".
+  const metaTagsScore = Math.max(
+    0,
+    10 -
+      (seo.title ? 0 : 4) -
+      (seo.title && (seo.titleLength < 30 || seo.titleLength > 65) ? 1.5 : 0) -
+      (seo.metaDescription ? 0 : 3) -
+      (seo.metaDescription && (seo.metaDescriptionLength < 70 || seo.metaDescriptionLength > 160) ? 1 : 0) -
+      (seo.hasOpenGraph ? 0 : 0.5)
+  );
+  const headingsScore = Math.max(0, 10 - (seo.h1Count === 0 ? 5 : seo.h1Count > 1 ? 2 : 0) - (seo.h2Count === 0 ? 2 : 0));
+  const filesScore = (seo.sitemapFound ? 5 : 0) + (seo.robotsFound ? 5 : 0);
+  const linksScore = Math.max(0, 10 - (seo.internalLinks === 0 ? 5 : 0) - Math.min(4, seo.genericAnchors));
+
+  const imagesFormatScore =
+    images.modernFormat + images.legacyFormat > 0
+      ? (images.modernFormat / (images.modernFormat + images.legacyFormat)) * 10
+      : 10;
+  const imagesAltScore = images.total > 0 ? ((images.total - images.withoutAlt) / images.total) * 10 : 10;
+  const weighedImages = images.entries.filter((e) => e.weightBytes != null);
+  const avgImageWeight =
+    weighedImages.length > 0
+      ? weighedImages.reduce((s, e) => s + (e.weightBytes || 0), 0) / weighedImages.length
+      : 0;
+  const imagesWeightScore = avgImageWeight === 0 ? 10 : avgImageWeight < 100_000 ? 10 : avgImageWeight < 300_000 ? 6 : 3;
+
   return (
     <div className="ls-result-wrap" style={{ maxWidth: 1000, margin: "0 auto", padding: "2rem 1.5rem" }}>
+      {alto.length > 0 && (
+        <div className="lt-alert ls-top-alert" style={{ marginBottom: "1.5rem" }}>
+          <p>
+            <strong>⚠️ Atenção:</strong> encontramos <strong>{alto.length} problema(s) de alto impacto</strong> que
+            provavelmente estão prejudicando seu tráfego orgânico no Google.
+          </p>
+          <WhatsAppCtaButton site={report.finalUrl} slug={report.slug} />
+        </div>
+      )}
+
       <div className="lt-card ls-result-hero" style={{ marginBottom: "1.5rem" }}>
         <ScoreRing score={report.overallScore} size={130} />
         <div>
@@ -79,8 +150,8 @@ export function ResultView({ report }: { report: AnalysisReport }) {
             {heroMessage(report.overallScore)}
           </h2>
           <p className="lt-body" style={{ fontSize: ".82rem", marginTop: ".6rem" }}>
-            A nota geral considera, de forma conjunta, Velocidade, SEO, Mobile, Imagens, Subpáginas
-            e Analytics.
+            A nota geral considera, de forma conjunta, Velocidade, SEO, Mobile, Imagens, GEO,
+            E-E-A-T, Subpáginas e Analytics.
           </p>
         </div>
       </div>
@@ -144,193 +215,414 @@ export function ResultView({ report }: { report: AnalysisReport }) {
               <ProblemGroup severity="baixo" problems={baixo} />
             </>
           )}
+
+          {report.problems.length > 0 && (
+            <div className="lt-card accent" style={{ marginTop: "2rem" }}>
+              <h3>✅ Benefícios de resolver as correções</h3>
+              <div className="lt-blist" style={{ marginTop: ".5rem" }}>
+                <div className="ls-benefit-row">
+                  <span className="lt-bdot" />
+                  <p className="lt-body">Mais chances de aparecer bem posicionado no Google para buscas relevantes.</p>
+                </div>
+                <div className="ls-benefit-row">
+                  <span className="lt-bdot" />
+                  <p className="lt-body">Visitantes permanecem mais tempo no site em vez de desistir por lentidão ou erros.</p>
+                </div>
+                <div className="ls-benefit-row">
+                  <span className="lt-bdot" />
+                  <p className="lt-body">Mais dados de tráfego e comportamento para decisões de marketing.</p>
+                </div>
+                <div className="ls-benefit-row">
+                  <span className="lt-bdot" />
+                  <p className="lt-body">Experiência melhor para quem acessa pelo celular — maioria dos visitantes hoje.</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
       {tab === "velocidade" && (
         <div className="lt-card">
-          <h3>Velocidade</h3>
+          <h3>⚡ Análise de Velocidade</h3>
           <p className="lt-body">
             Fonte dos dados:{" "}
-            {report.speed.source === "pagespeed"
+            {speed.source === "pagespeed"
               ? "Google PageSpeed Insights"
               : "Tempo de resposta do servidor (fallback — configure PAGESPEED_API_KEY para dados completos do Google)"}
           </p>
-          <table className="lt-table" style={{ marginTop: "1rem" }}>
-            <tbody>
-              <tr>
-                <td className="lt-tool">Tempo de carregamento</td>
-                <td>{(report.speed.loadTimeMs / 1000).toFixed(2)}s</td>
-              </tr>
-              {report.speed.lcp != null && (
-                <tr>
-                  <td className="lt-tool">LCP (Largest Contentful Paint)</td>
-                  <td>{(report.speed.lcp / 1000).toFixed(2)}s</td>
-                </tr>
-              )}
-              {report.speed.cls != null && (
-                <tr>
-                  <td className="lt-tool">CLS (Cumulative Layout Shift)</td>
-                  <td>{report.speed.cls.toFixed(3)}</td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+
+          <div className="ls-check-grid">
+            <StatusCard
+              label="Carregamento completo"
+              value={`${(speed.loadTimeMs / 1000).toFixed(1)}s`}
+              status={speed.classification === "Excelente" || speed.classification === "Bom" ? "ok" : speed.classification === "Regular" ? "warn" : "critical"}
+            />
+            <StatusCard label="Resposta do servidor (TTFB)" value={`${speed.ttfbMs}ms`} status={speed.ttfbMs < 800 ? "ok" : "warn"} />
+            <StatusCard label="Tamanho da página" value={formatBytes(speed.pageSizeBytes)} status="neutral" />
+            <StatusCard
+              label="GZIP / Compressão"
+              value={speed.gzipEnabled ? "Ativado" : "Desativado"}
+              status={speed.gzipEnabled ? "ok" : "critical"}
+            />
+            <StatusCard label="Servidor" value={speed.server || "Não informado"} status="neutral" />
+            <StatusCard label="Classificação" value={speed.classification} status={speed.classification === "Lento" ? "critical" : speed.classification === "Regular" ? "warn" : "ok"} />
+          </div>
+
+          {speed.lcp != null && (
+            <div className="ls-check-grid" style={{ marginTop: 0 }}>
+              <StatusCard label="LCP (Largest Contentful Paint)" value={`${(speed.lcp / 1000).toFixed(2)}s`} status={speed.lcp < 2500 ? "ok" : "warn"} />
+              {speed.cls != null && <StatusCard label="CLS (Cumulative Layout Shift)" value={speed.cls.toFixed(3)} status={speed.cls < 0.1 ? "ok" : "warn"} />}
+            </div>
+          )}
+
+          <div style={{ marginTop: "1.75rem" }}>
+            <ScoreBar label="Nota de Velocidade" score={report.categories.find((c) => c.key === "velocidade")?.score ?? 0} />
+          </div>
+
+          <div className="lt-prompt" style={{ marginTop: "1.5rem" }}>
+            💡 Referência (tempo de carregamento completo): Excelente {"< 1.5s"} · Bom 1.5s–2.5s · Regular 2.5s–4.5s ·
+            Lento {"> 4.5s"}
+          </div>
         </div>
       )}
 
       {tab === "seo" && (
         <div className="lt-card">
-          <h3>SEO on-page</h3>
-          <table className="lt-table" style={{ marginTop: "1rem" }}>
-            <tbody>
-              <tr>
-                <td className="lt-tool">Meta title</td>
-                <td>{report.seo.title || "Não encontrado"} {report.seo.title && `(${report.seo.titleLength} caracteres)`}</td>
-              </tr>
-              <tr>
-                <td className="lt-tool">Meta description</td>
-                <td>
-                  {report.seo.metaDescription || "Não encontrada"}{" "}
-                  {report.seo.metaDescription && `(${report.seo.metaDescriptionLength} caracteres)`}
-                </td>
-              </tr>
-              <tr>
-                <td className="lt-tool">H1</td>
-                <td>{report.seo.h1Text || "Não encontrado"} ({report.seo.h1Count} no total)</td>
-              </tr>
-              <tr>
-                <td className="lt-tool">URL canônica</td>
-                <td>{report.seo.canonical || "Não definida"}</td>
-              </tr>
-              <tr>
-                <td className="lt-tool">Open Graph (compartilhamento social)</td>
-                <td>{report.seo.hasOpenGraph ? "Configurado" : "Não configurado"}</td>
-              </tr>
-              <tr>
-                <td className="lt-tool">Idioma declarado</td>
-                <td>{report.seo.lang || "Não declarado"}</td>
-              </tr>
-            </tbody>
-          </table>
+          <h3>🔍 Análise SEO Completa</h3>
+          <p className="lt-body">Verificação dos principais fatores de ranqueamento no Google.</p>
+
+          <div className="ls-check-grid">
+            <StatusCard
+              label="Meta title"
+              value={seo.title || "Ausente"}
+              note={seo.title ? `${seo.titleLength} caracteres (ideal: 50–60)` : null}
+              status={!seo.title ? "critical" : seo.titleLength < 30 || seo.titleLength > 65 ? "warn" : "ok"}
+            />
+            <StatusCard
+              label="Meta description"
+              value={seo.metaDescription || "Ausente"}
+              note={seo.metaDescription ? `${seo.metaDescriptionLength} caracteres (ideal: 120–160)` : null}
+              status={!seo.metaDescription ? "critical" : seo.metaDescriptionLength < 70 || seo.metaDescriptionLength > 160 ? "warn" : "ok"}
+            />
+            <StatusCard label="Tag canonical" value={seo.canonical || "Não configurada"} status={seo.canonical ? "ok" : "warn"} />
+            <StatusCard label="Meta robots" value={seo.robotsMeta || "Não configurada"} status="neutral" />
+            <StatusCard label="sitemap.xml" value={seo.sitemapFound ? "Encontrado" : "Não encontrado"} status={seo.sitemapFound ? "ok" : "critical"} />
+            <StatusCard label="robots.txt" value={seo.robotsFound ? "Encontrado" : "Não encontrado"} status={seo.robotsFound ? "ok" : "warn"} />
+            <StatusCard label="Open Graph" value={seo.hasOpenGraph ? "Configurado" : "Não configurado"} status={seo.hasOpenGraph ? "ok" : "warn"} />
+            <StatusCard
+              label="Links internos / externos"
+              value={`${seo.internalLinks} internos / ${seo.externalLinks} externos`}
+              note={seo.genericAnchors > 0 ? `${seo.genericAnchors} links com âncoras genéricas` : null}
+              status={seo.internalLinks === 0 ? "critical" : "ok"}
+            />
+          </div>
+
+          <h3 style={{ marginTop: "2rem" }}>📌 Estrutura de títulos (headings)</h3>
+          <div className="ls-check-grid">
+            <StatusCard label="<H1>" value={seo.h1Count} note={seo.h1Text} status={seo.h1Count === 1 ? "ok" : "critical"} />
+            <StatusCard label="<H2>" value={seo.h2Count} status={seo.h2Count > 0 ? "ok" : "warn"} />
+            <StatusCard label="<H3>" value={seo.h3Count} status="neutral" />
+          </div>
+
+          <h3 style={{ marginTop: "2rem" }}>📊 Pontuação SEO detalhada</h3>
+          <div style={{ marginTop: "1rem" }}>
+            <ScoreBar label="Meta Tags" weightPct={30} score={metaTagsScore} />
+            <ScoreBar label="Headings (H1/H2/H3)" weightPct={20} score={headingsScore} />
+            <ScoreBar label="Arquivos (sitemap/robots)" weightPct={15} score={filesScore} />
+            <ScoreBar label="Links" weightPct={15} score={linksScore} />
+          </div>
+        </div>
+      )}
+
+      {tab === "geo" && (
+        <div className="lt-card">
+          <h3>🤖 Otimização para Busca por Inteligência Artificial (GEO)</h3>
+          <p className="lt-body">Avaliação da visibilidade da sua marca para ChatGPT, Gemini e Perplexity.</p>
+
+          <div className="ls-check-grid">
+            <StatusCard
+              label="Acesso de crawlers de IA"
+              value={geo.crawlersOpen ? "Totalmente aberto" : "Bloqueado no robots.txt"}
+              note={geo.crawlersOpen ? "Robôs como GPTBot e Google-Extended podem indexar o site." : "Isso impede que sua marca seja recomendada por IAs."}
+              status={geo.crawlersOpen ? "ok" : "critical"}
+            />
+            <StatusCard
+              label="Arquivo /llms.txt"
+              value={geo.llmsTxtFound ? "Encontrado" : "Não encontrado"}
+              note="Resumo estruturado do negócio para IAs lerem."
+              status={geo.llmsTxtFound ? "ok" : "critical"}
+            />
+            <StatusCard
+              label="Arquivo /llms-full.txt"
+              value={geo.llmsFullTxtFound ? "Encontrado" : "Não encontrado"}
+              note="Contexto detalhado para modelos de linguagem."
+              status={geo.llmsFullTxtFound ? "ok" : "warn"}
+            />
+            <StatusCard
+              label="Dados estruturados (Schema.org)"
+              value={geo.schemaTypes.length > 0 ? `Detectados: ${geo.schemaTypes.join(", ")}` : "Não detectados"}
+              status={geo.schemaTypes.length > 0 ? "ok" : "warn"}
+            />
+            <StatusCard
+              label="Estrutura semântica (HTML5)"
+              value={geo.hasSemanticHtml ? `${geo.semanticTagsFound.length} tags encontradas` : "Poucas tags semânticas"}
+              note={geo.semanticTagsFound.join(", ") || null}
+              status={geo.hasSemanticHtml ? "ok" : "warn"}
+            />
+            <StatusCard
+              label="Padrões de resposta direta"
+              value={geo.hasDirectAnswerPatterns ? "Listas/tabelas detectadas" : "Poucas listas ou tabelas"}
+              note={`${geo.listCount} lista(s) · ${geo.tableCount} tabela(s)`}
+              status={geo.hasDirectAnswerPatterns ? "ok" : "warn"}
+            />
+            <StatusCard
+              label="Sitemap referenciado no robots.txt"
+              value={geo.sitemapReferencedInRobots ? "Configurado" : "Ausente"}
+              status={geo.sitemapReferencedInRobots ? "ok" : "warn"}
+            />
+          </div>
+
+          <div className="lt-prompt" style={{ marginTop: "1.5rem" }}>
+            🤖 <b>O que é GEO?</b> Mais buscas de usuários já começam em respostas diretas geradas por IA. O GEO
+            prepara o site estruturalmente para que ChatGPT, Gemini e Perplexity consigam ler o conteúdo e
+            recomendar a empresa nas respostas.
+          </div>
+        </div>
+      )}
+
+      {tab === "eeat" && (
+        <div className="lt-card">
+          <h3>⭐ Experiência, Autoridade e Confiabilidade (E-E-A-T)</h3>
+          <p className="lt-body">Critérios de autoria, segurança e reputação institucional exigidos pelo Google e pelas IAs.</p>
+
+          <div className="ls-check-grid">
+            <StatusCard
+              label="CNPJ da empresa"
+              value={eeat.cnpjFound ? eeat.cnpjValue : "Não detectado"}
+              note="A falta de CNPJ reduz a credibilidade perante o Google."
+              status={eeat.cnpjFound ? "ok" : "critical"}
+            />
+            <StatusCard
+              label="Seção ou página de FAQ"
+              value={eeat.faqFound ? "Detectada" : "Não detectada"}
+              status={eeat.faqFound ? "ok" : "warn"}
+            />
+            <StatusCard
+              label="Depoimentos e avaliações"
+              value={eeat.testimonialsFound ? "Detectados" : "Não detectados"}
+              status={eeat.testimonialsFound ? "ok" : "warn"}
+            />
+            <StatusCard
+              label="Página sobre a empresa"
+              value={eeat.aboutPageFound ? "Detectada" : "Não detectada"}
+              status={eeat.aboutPageFound ? "ok" : "warn"}
+            />
+            <StatusCard
+              label="Política de privacidade"
+              value={eeat.privacyPolicyFound ? "Detectada" : "Não detectada"}
+              status={eeat.privacyPolicyFound ? "ok" : "critical"}
+            />
+            <StatusCard
+              label="Página ou informações de contato"
+              value={eeat.contactFound ? "Detectadas" : "Não detectadas"}
+              status={eeat.contactFound ? "ok" : "critical"}
+            />
+          </div>
+
+          <div className="lt-prompt" style={{ marginTop: "1.5rem" }}>
+            ⭐ <b>O que significa E-E-A-T?</b> Experience, Expertise, Authoritativeness, Trustworthiness. O Google e
+            as IAs priorizam indicar empresas legítimas e seguras — contato claro, política de privacidade, provas
+            sociais e CNPJ visível são os pilares para ganhar relevância.
+          </div>
         </div>
       )}
 
       {tab === "imagens" && (
         <div className="lt-card">
-          <h3>Imagens</h3>
-          <table className="lt-table" style={{ marginTop: "1rem" }}>
-            <tbody>
-              <tr>
-                <td className="lt-tool">Total de imagens</td>
-                <td>{report.images.total}</td>
-              </tr>
-              <tr>
-                <td className="lt-tool">Sem texto alternativo (alt)</td>
-                <td>{report.images.withoutAlt}</td>
-              </tr>
-              <tr>
-                <td className="lt-tool">Formato moderno (WebP/AVIF)</td>
-                <td>{report.images.modernFormat}</td>
-              </tr>
-              <tr>
-                <td className="lt-tool">Formato antigo (JPG/PNG/GIF)</td>
-                <td>{report.images.legacyFormat}</td>
-              </tr>
-            </tbody>
-          </table>
+          <h3>🖼️ Análise de Imagens</h3>
+          <p className="lt-body">
+            {images.total} imagens analisadas · {images.total > 0 ? Math.round(((images.total - images.withoutAlt) / images.total) * 100) : 0}% com ALT ·{" "}
+            {images.modernFormat + images.legacyFormat > 0 ? Math.round((images.modernFormat / (images.modernFormat + images.legacyFormat)) * 100) : 0}% em formato moderno
+          </p>
+
+          <div style={{ marginTop: "1rem" }}>
+            <ScoreBar label="Formato das imagens" weightPct={40} score={imagesFormatScore} />
+            <ScoreBar label="Peso médio" weightPct={40} score={imagesWeightScore} />
+            <ScoreBar label="Cobertura de ALT" weightPct={20} score={imagesAltScore} />
+          </div>
+
+          {images.entries.length > 0 && (
+            <div style={{ overflowX: "auto", marginTop: "1.5rem" }}>
+              <table className="lt-table">
+                <thead>
+                  <tr>
+                    <th>Preview</th>
+                    <th>Arquivo</th>
+                    <th>Formato</th>
+                    <th>Peso</th>
+                    <th>ALT</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {images.entries.slice(0, 30).map((img, i) => (
+                    <tr key={i} className={!img.hasAlt ? "critical" : ""}>
+                      <td>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={img.src}
+                          alt=""
+                          loading="lazy"
+                          style={{ width: 40, height: 40, objectFit: "cover", borderRadius: 6 }}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).style.visibility = "hidden";
+                          }}
+                        />
+                      </td>
+                      <td style={{ maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis" }}>{img.src.split("/").pop()}</td>
+                      <td className="lt-tool">{img.format}</td>
+                      <td>{img.weightBytes != null ? formatBytes(img.weightBytes) : "—"}</td>
+                      <td>{img.hasAlt ? "✅" : "❌"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
       {tab === "mobile" && (
         <div className="lt-card">
-          <h3>Mobile</h3>
-          <table className="lt-table" style={{ marginTop: "1rem" }}>
-            <tbody>
-              <tr>
-                <td className="lt-tool">Meta viewport</td>
-                <td>{report.mobile.hasViewport ? "Configurada corretamente" : "Ausente ou incompleta"}</td>
-              </tr>
-              <tr>
-                <td className="lt-tool">Conteúdo da tag</td>
-                <td style={{ fontFamily: "var(--lt-f-mono)" }}>{report.mobile.viewportContent || "—"}</td>
-              </tr>
-            </tbody>
-          </table>
+          <h3>📱 Análise de Responsividade Mobile</h3>
+          <div className="ls-check-grid">
+            <StatusCard
+              label="Meta viewport"
+              value={mobile.viewportContent || "Ausente"}
+              status={mobile.hasViewport ? "ok" : "critical"}
+            />
+            <StatusCard label="Zoom do usuário" value={mobile.zoomAllowed ? "Permitido" : "Bloqueado"} status={mobile.zoomAllowed ? "ok" : "warn"} />
+            <StatusCard label="Media queries (breakpoints)" value={`${mobile.mediaQueriesCount} detectada(s)`} status={mobile.mediaQueriesCount > 0 ? "ok" : "warn"} />
+            <StatusCard label="Framework responsivo" value={mobile.frameworkDetected || "Não detectado"} status="neutral" />
+            <StatusCard
+              label="Imagens responsivas (srcset)"
+              value={`${mobile.responsiveImagesPct}% com srcset`}
+              status={mobile.responsiveImagesPct > 50 ? "ok" : "warn"}
+            />
+            <StatusCard
+              label="Lazy loading"
+              value={mobile.lazyImagesCount > 0 ? `${mobile.lazyImagesCount} imagem(ns)` : "Nenhuma"}
+              status={mobile.lazyImagesCount > 0 ? "ok" : "warn"}
+            />
+          </div>
+
+          <div className="lt-prompt" style={{ marginTop: "1.5rem" }}>
+            📱 Mais de 65% das buscas no Google são feitas pelo celular. O Google usa o Mobile-First Indexing — ele
+            avalia a versão mobile para definir o posicionamento em todos os dispositivos.
+          </div>
         </div>
       )}
 
       {tab === "analytics" && (
         <div className="lt-card">
-          <h3>Analytics e trackers</h3>
-          {report.analytics.detected.length === 0 ? (
-            <p className="lt-body">Nenhuma ferramenta de analytics foi detectada no código-fonte.</p>
-          ) : (
-            <ul className="lt-blist" style={{ marginTop: "1rem" }}>
-              {report.analytics.detected.map((d) => (
-                <li className="lt-brow" key={d}>
-                  <span className="lt-bdot" />
-                  <p>{d}</p>
-                </li>
-              ))}
-            </ul>
-          )}
+          <h3>📊 Analytics &amp; Rastreamento</h3>
+          <p className="lt-body">Ferramentas de monitoramento detectadas no site.</p>
+          <div className="ls-check-grid">
+            <StatusCard label="Google Analytics 4" value={analytics.ga4Id || "Não instalado"} status={analytics.ga4 ? "ok" : "critical"} />
+            <StatusCard label="Universal Analytics (legado)" value={analytics.universalAnalytics ? "Detectado" : "Não detectado"} status={analytics.universalAnalytics ? "warn" : "neutral"} />
+            <StatusCard label="Google Tag Manager" value={analytics.gtmId || "Não instalado"} status={analytics.gtm ? "ok" : "warn"} />
+            <StatusCard label="Meta Pixel (Facebook)" value={analytics.metaPixel ? "Instalado" : "Não instalado"} status={analytics.metaPixel ? "ok" : "neutral"} />
+            <StatusCard label="Hotjar" value={analytics.hotjar ? "Instalado" : "Não instalado"} status={analytics.hotjar ? "ok" : "neutral"} />
+            <StatusCard label="Microsoft Clarity" value={analytics.clarity ? "Instalado" : "Não instalado"} status={analytics.clarity ? "ok" : "neutral"} />
+          </div>
         </div>
       )}
 
       {tab === "subpaginas" && (
         <div className="lt-card">
-          <h3>Subpáginas verificadas</h3>
-          {report.subpages.length === 0 ? (
-            <p className="lt-body">Nenhuma subpágina encontrada (sitemap.xml ou links internos).</p>
+          <h3>📑 Análise de Subpáginas</h3>
+          <p className="lt-body">{subpages.length} página(s) interna(s) analisada(s).</p>
+          {subpages.length === 0 ? (
+            <p className="lt-body" style={{ marginTop: "1rem" }}>
+              Nenhuma subpágina encontrada (sitemap.xml ou links internos).
+            </p>
           ) : (
-            <table className="lt-table" style={{ marginTop: "1rem" }}>
-              <thead>
-                <tr>
-                  <th>Página</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {report.subpages.map((p) => (
-                  <tr key={p.url} className={p.ok ? "" : "critical"}>
-                    <td>{p.title || p.url}</td>
-                    <td>{p.status ?? "Erro de acesso"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div style={{ marginTop: "1.25rem" }}>
+              {subpages.map((p) => {
+                const issues = subpageIssues(p);
+                const score = subpageScore(p);
+                return (
+                  <div key={p.url} className={`ls-subpage-card ${issues.length > 0 ? "has-issue" : ""}`}>
+                    <div className="ls-subpage-card-head">
+                      <div>
+                        <div className="ls-subpage-card-title">{p.title || p.label}</div>
+                        <div className="ls-subpage-card-url">{p.url}</div>
+                      </div>
+                      <ScoreRing score={score} size={54} />
+                    </div>
+                    {issues.length > 0 ? (
+                      <div className="ls-subpage-tags">
+                        {issues.map((issue, i) => (
+                          <span className="ls-subpage-tag" key={i}>
+                            {issue}
+                          </span>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="lt-body" style={{ marginTop: ".6rem", fontSize: ".82rem" }}>
+                        ✅ Nenhum problema encontrado nessa página.
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
       )}
 
-      {tab === "keyword" && report.keywordResult && (
+      {tab === "keyword" && keywordResult && (
         <div className="lt-card">
-          <h3>Palavra-chave: &ldquo;{report.keywordResult.keyword}&rdquo;</h3>
-          <table className="lt-table" style={{ marginTop: "1rem" }}>
-            <tbody>
-              <tr>
-                <td className="lt-tool">Presente no título</td>
-                <td>{report.keywordResult.inTitle ? "Sim" : "Não"}</td>
-              </tr>
-              <tr>
-                <td className="lt-tool">Presente no H1</td>
-                <td>{report.keywordResult.inH1 ? "Sim" : "Não"}</td>
-              </tr>
-              <tr>
-                <td className="lt-tool">Presente na meta description</td>
-                <td>{report.keywordResult.inMetaDescription ? "Sim" : "Não"}</td>
-              </tr>
-              <tr>
-                <td className="lt-tool">Presente na URL</td>
-                <td>{report.keywordResult.inUrl ? "Sim" : "Não"}</td>
-              </tr>
-              <tr>
-                <td className="lt-tool">Ocorrências no texto</td>
-                <td>{report.keywordResult.occurrences}</td>
-              </tr>
-            </tbody>
-          </table>
+          <h3>🔑 Análise de Palavra-chave: &ldquo;{keywordResult.keyword}&rdquo;</h3>
+          <div className="ls-check-grid">
+            <StatusCard label="Presente no título" value={keywordResult.inTitle ? "Sim" : "Não"} status={keywordResult.inTitle ? "ok" : "critical"} />
+            <StatusCard label="Presente no H1" value={keywordResult.inH1 ? "Sim" : "Não"} status={keywordResult.inH1 ? "ok" : "critical"} />
+            <StatusCard label="Presente na meta description" value={keywordResult.inMetaDescription ? "Sim" : "Não"} status={keywordResult.inMetaDescription ? "ok" : "warn"} />
+            <StatusCard label="Presente na URL" value={keywordResult.inUrl ? "Sim" : "Não"} status={keywordResult.inUrl ? "ok" : "neutral"} />
+            <StatusCard label="Presente no 1º parágrafo" value={keywordResult.inFirstParagraph ? "Sim" : "Não"} status={keywordResult.inFirstParagraph ? "ok" : "warn"} />
+            <StatusCard label="Presente em subtítulos (H2/H3)" value={keywordResult.inSubheadings ? "Sim" : "Não"} status={keywordResult.inSubheadings ? "ok" : "warn"} />
+            <StatusCard label="Ocorrências no texto" value={keywordResult.occurrences} status="neutral" />
+            <StatusCard label="Densidade" value={`${keywordResult.density}%`} note="Ideal: entre 1% e 3%" status={keywordResult.density >= 1 && keywordResult.density <= 3 ? "ok" : "warn"} />
+          </div>
+        </div>
+      )}
+
+      {tab === "semantica" && (
+        <div className="lt-card">
+          <h3>🧠 Análise Semântica</h3>
+          <p className="lt-body">Palavras-chave e estrutura de conteúdo — o que o Google lê para entender o seu negócio.</p>
+          <div className="ls-check-grid">
+            <StatusCard label="Total de palavras" value={semantics.totalWords} status="neutral" />
+            <StatusCard label="Parágrafos" value={semantics.paragraphCount} status="neutral" />
+            <StatusCard label="Média por parágrafo" value={`${semantics.avgCharsPerParagraph} chars`} status="neutral" />
+            <StatusCard label="Legibilidade" value={semantics.readability} status={semantics.readability === "Boa" ? "ok" : semantics.readability === "Média" ? "warn" : "critical"} />
+          </div>
+
+          {semantics.topWords.length > 0 && (
+            <>
+              <h3 style={{ marginTop: "2rem" }}>🔠 Top 10 palavras mais frequentes</h3>
+              <p className="lt-body" style={{ fontSize: ".82rem" }}>
+                Estas são as palavras que o Google mais associa ao seu site.
+              </p>
+              <div className="ls-word-chips">
+                {semantics.topWords.map((w) => (
+                  <span className="ls-word-chip" key={w.word}>
+                    <b>{w.word}</b> {w.count}x <span>{w.pct}%</span>
+                  </span>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       )}
 

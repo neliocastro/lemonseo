@@ -3,6 +3,10 @@ export interface FetchResult {
   finalUrl: string;
   status: number;
   loadTimeMs: number;
+  ttfbMs: number;
+  pageSizeBytes: number;
+  gzipEnabled: boolean;
+  server: string | null;
 }
 
 export function normalizeUrl(input: string): string {
@@ -27,15 +31,23 @@ export async function fetchHtml(rawUrl: string, timeoutMs = 12000): Promise<Fetc
         "User-Agent":
           "Mozilla/5.0 (compatible; LemonSEOBot/1.0; +https://lemonseo.example/bot)",
         Accept: "text/html,application/xhtml+xml",
+        "Accept-Encoding": "gzip, br",
       },
     });
-    const loadTimeMs = Date.now() - start;
+    const ttfbMs = Date.now() - start;
     const html = await res.text();
+    const loadTimeMs = Date.now() - start;
+    const encoding = res.headers.get("content-encoding") || "";
+
     return {
       html,
       finalUrl: res.url || url,
       status: res.status,
       loadTimeMs,
+      ttfbMs,
+      pageSizeBytes: new TextEncoder().encode(html).length,
+      gzipEnabled: /gzip|br|deflate/i.test(encoding),
+      server: res.headers.get("server"),
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Erro desconhecido";

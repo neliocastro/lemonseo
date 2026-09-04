@@ -3,34 +3,65 @@ import { customAlphabet } from "nanoid";
 import { fetchHtml, normalizeUrl } from "./analyzers/fetchHtml";
 import { analyzeSeo } from "./analyzers/seo";
 import { analyzeImages } from "./analyzers/images";
+import { fetchImageWeights } from "./analyzers/imageWeights";
 import { analyzeMobile } from "./analyzers/mobile";
 import { analyzeAnalytics } from "./analyzers/analytics";
 import { analyzeKeyword } from "./analyzers/keyword";
 import { analyzeSubpages } from "./analyzers/subpages";
 import { analyzeSpeed } from "./analyzers/speed";
-import { buildCategories, buildOverallScore, buildProblems } from "./scoring";
+import { analyzeSiteFiles } from "./analyzers/files";
+import { analyzeGeo } from "./analyzers/geo";
+import { analyzeEeat } from "./analyzers/eeat";
+import { analyzeSemantics } from "./analyzers/semantics";
+import { buildCategories, buildOverallScore, buildProblems, classifySpeed } from "./scoring";
 import type { AnalysisReport } from "./types";
 
 const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 8);
 
 export async function runAnalysis(rawUrl: string, rawKeyword: string | null): Promise<AnalysisReport> {
   const url = normalizeUrl(rawUrl);
-  const { html, finalUrl, loadTimeMs } = await fetchHtml(url);
+  const fetchResult = await fetchHtml(url);
+  const { html, finalUrl, loadTimeMs, ttfbMs, pageSizeBytes, gzipEnabled, server } = fetchResult;
   const $ = cheerio.load(html);
 
-  const seo = analyzeSeo($);
-  const images = analyzeImages($);
-  const mobile = analyzeMobile($);
+  const seoRaw = analyzeSeo($, finalUrl);
+  const imagesRaw = analyzeImages($, finalUrl);
+  const mobile = analyzeMobile($, html);
   const analytics = analyzeAnalytics(html);
   const keywordResult = analyzeKeyword($, finalUrl, rawKeyword);
-  const [subpages, speed] = await Promise.all([
+  const bodyText = $("body").text();
+  const eeat = analyzeEeat($, bodyText);
+  const semantics = analyzeSemantics($);
+
+  const [subpages, speedInfo, files, imagesWithWeights] = await Promise.all([
     analyzeSubpages($, finalUrl),
     analyzeSpeed(finalUrl, loadTimeMs),
+    analyzeSiteFiles(finalUrl),
+    fetchImageWeights(imagesRaw.entries),
   ]);
 
-  const categories = buildCategories({ seo, images, mobile, speed, subpages, analytics, keywordResult });
+  const geo = analyzeGeo($, files);
+
+  const seo = {
+    ...seoRaw,
+    sitemapFound: files.sitemapFound,
+    robotsFound: files.robotsFound,
+  };
+
+  const images = { ...imagesRaw, entries: imagesWithWeights };
+
+  const speed = {
+    ttfbMs,
+    pageSizeBytes,
+    gzipEnabled,
+    server,
+    classification: classifySpeed(loadTimeMs),
+    ...speedInfo,
+  };
+
+  const categories = buildCategories({ seo, images, mobile, speed, subpages, analytics, keywordResult, geo, eeat });
   const overallScore = buildOverallScore(categories);
-  const problems = buildProblems({ seo, images, mobile, speed, subpages, analytics, keywordResult });
+  const problems = buildProblems({ seo, images, mobile, speed, subpages, analytics, keywordResult, geo, eeat });
 
   const slug = nanoid();
 
@@ -50,5 +81,8 @@ export async function runAnalysis(rawUrl: string, rawKeyword: string | null): Pr
     subpages,
     analytics,
     keywordResult,
+    geo,
+    eeat,
+    semantics,
   };
 }

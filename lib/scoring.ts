@@ -2,12 +2,22 @@ import type {
   AnalysisReport,
   AnalyticsResult,
   CategoryScore,
+  EeatData,
+  GeoData,
   KeywordResult,
   Problem,
 } from "./types";
 
 function clamp10(n: number): number {
   return Math.max(0, Math.min(10, Math.round(n * 10) / 10));
+}
+
+export function classifySpeed(loadTimeMs: number): "Excelente" | "Bom" | "Regular" | "Lento" {
+  const s = loadTimeMs / 1000;
+  if (s < 1.5) return "Excelente";
+  if (s < 2.5) return "Bom";
+  if (s < 4.5) return "Regular";
+  return "Lento";
 }
 
 interface ScoringInput {
@@ -18,6 +28,8 @@ interface ScoringInput {
   subpages: AnalysisReport["subpages"];
   analytics: AnalyticsResult;
   keywordResult: KeywordResult | null;
+  geo: GeoData;
+  eeat: EeatData;
 }
 
 function scoreSpeed(speed: ScoringInput["speed"]): { score: number; detail: string } {
@@ -83,6 +95,38 @@ function scoreAnalytics(analytics: AnalyticsResult): { score: number; detail: st
   };
 }
 
+function scoreGeo(geo: GeoData): { score: number; detail: string } {
+  const checks = [
+    geo.crawlersOpen,
+    geo.llmsTxtFound,
+    geo.llmsFullTxtFound,
+    geo.hasSemanticHtml,
+    geo.hasDirectAnswerPatterns,
+    geo.sitemapReferencedInRobots,
+  ];
+  const passed = checks.filter(Boolean).length;
+  return {
+    score: clamp10((passed / checks.length) * 10),
+    detail: geo.crawlersOpen ? `${passed}/${checks.length} sinais de IA ok` : "Crawlers de IA bloqueados",
+  };
+}
+
+function scoreEeat(eeat: EeatData): { score: number; detail: string } {
+  const checks = [
+    eeat.cnpjFound,
+    eeat.faqFound,
+    eeat.testimonialsFound,
+    eeat.aboutPageFound,
+    eeat.privacyPolicyFound,
+    eeat.contactFound,
+  ];
+  const passed = checks.filter(Boolean).length;
+  return {
+    score: clamp10((passed / checks.length) * 10),
+    detail: `${passed}/${checks.length} sinais de confiança`,
+  };
+}
+
 export function buildCategories(input: ScoringInput): CategoryScore[] {
   const speed = scoreSpeed(input.speed);
   const seo = scoreSeo(input.seo);
@@ -90,22 +134,28 @@ export function buildCategories(input: ScoringInput): CategoryScore[] {
   const mobile = scoreMobile(input.mobile);
   const subpages = scoreSubpages(input.subpages);
   const analytics = scoreAnalytics(input.analytics);
+  const geo = scoreGeo(input.geo);
+  const eeat = scoreEeat(input.eeat);
 
   return [
     { key: "velocidade", label: "Velocidade", icon: "⚡", score: speed.score, detail: speed.detail },
     { key: "seo", label: "SEO", icon: "🔍", score: seo.score, detail: seo.detail },
     { key: "mobile", label: "Mobile", icon: "📱", score: mobile.score, detail: mobile.detail },
     { key: "imagens", label: "Imagens", icon: "🖼️", score: images.score, detail: images.detail },
+    { key: "geo", label: "GEO", icon: "🤖", score: geo.score, detail: geo.detail },
+    { key: "eeat", label: "E-E-A-T", icon: "⭐", score: eeat.score, detail: eeat.detail },
     { key: "subpaginas", label: "Subpáginas", icon: "📑", score: subpages.score, detail: subpages.detail },
     { key: "analytics", label: "Analytics", icon: "📊", score: analytics.score, detail: analytics.detail },
   ];
 }
 
 const WEIGHTS: Record<string, number> = {
-  velocidade: 0.25,
-  seo: 0.25,
-  mobile: 0.15,
-  imagens: 0.15,
+  velocidade: 0.2,
+  seo: 0.2,
+  mobile: 0.1,
+  imagens: 0.1,
+  geo: 0.1,
+  eeat: 0.1,
   subpaginas: 0.1,
   analytics: 0.1,
 };
@@ -117,7 +167,7 @@ export function buildOverallScore(categories: CategoryScore[]): number {
 
 export function buildProblems(input: ScoringInput): Problem[] {
   const problems: Problem[] = [];
-  const { seo, images, mobile, speed, analytics, subpages, keywordResult } = input;
+  const { seo, images, mobile, speed, analytics, subpages, keywordResult, geo, eeat } = input;
 
   const seconds = speed.loadTimeMs / 1000;
   if (seconds > 2.5) {
@@ -214,6 +264,151 @@ export function buildProblems(input: ScoringInput): Problem[] {
       titulo: `${brokenSubpages.length} subpágina(s) com problema de acesso`,
       impacto: "Links quebrados prejudicam a experiência do usuário e a forma como o Google rastreia o site.",
       severidade: brokenSubpages.length > 2 ? "alto" : "medio",
+    });
+  }
+
+  for (const page of subpages) {
+    if (!page.ok || !page.seo) continue;
+    const s = page.seo;
+
+    if (!page.title) {
+      problems.push({
+        categoria: "SEO",
+        titulo: `Página sem meta title (na página: ${page.label})`,
+        impacto: "Sem título, o Google decide sozinho o que mostrar no resultado de busca dessa página.",
+        severidade: "alto",
+      });
+    } else if (s.titleLength < 30 || s.titleLength > 65) {
+      problems.push({
+        categoria: "SEO",
+        titulo: `Título com tamanho inadequado (${s.titleLength} caracteres) na página: ${page.label}`,
+        impacto: "Títulos fora da medida ideal são cortados nos resultados de busca do Google.",
+        severidade: "medio",
+      });
+    }
+
+    if (!s.metaDescription) {
+      problems.push({
+        categoria: "SEO",
+        titulo: `Sem meta description (na página: ${page.label})`,
+        impacto: "Sem descrição, o Google exibe um trecho aleatório da página, reduzindo a taxa de cliques.",
+        severidade: "medio",
+      });
+    } else if (s.metaDescriptionLength < 70 || s.metaDescriptionLength > 160) {
+      problems.push({
+        categoria: "SEO",
+        titulo: `Meta description com tamanho inadequado (${s.metaDescriptionLength} caracteres) na página: ${page.label}`,
+        impacto: "Descrições fora da medida ideal são cortadas ou desperdiçam espaço no resultado de busca.",
+        severidade: "baixo",
+      });
+    }
+
+    if (s.h1Count === 0) {
+      problems.push({
+        categoria: "SEO",
+        titulo: `Página sem H1 (na página: ${page.label})`,
+        impacto: "O H1 ajuda o Google a entender o assunto principal dessa página.",
+        severidade: "medio",
+      });
+    } else if (s.h1Count > 1) {
+      problems.push({
+        categoria: "SEO",
+        titulo: `Múltiplos H1 (${s.h1Count}) na página: ${page.label}`,
+        impacto: "Vários H1 confundem a hierarquia de conteúdo para os buscadores nessa página.",
+        severidade: "baixo",
+      });
+    }
+
+    if (!s.hasViewport) {
+      problems.push({
+        categoria: "Mobile",
+        titulo: `Sem meta viewport (na página: ${page.label})`,
+        impacto: "Essa página pode aparecer quebrada ou minúscula em celulares.",
+        severidade: "medio",
+      });
+    }
+
+    if (s.imagesTotal > 0 && s.imagesWithoutAlt > 0) {
+      problems.push({
+        categoria: "Imagens",
+        titulo: `${s.imagesWithoutAlt} imagem(ns) sem atributo ALT (na página: ${page.label})`,
+        impacto: "Imagens sem alt prejudicam SEO e acessibilidade nessa página.",
+        severidade: s.imagesWithoutAlt >= 5 ? "medio" : "baixo",
+      });
+    }
+  }
+
+  if (!geo.crawlersOpen) {
+    problems.push({
+      categoria: "GEO",
+      titulo: "Crawlers de IA bloqueados no robots.txt",
+      impacto: "Bots como GPTBot e Google-Extended não conseguem ler o site — sua marca não aparece em respostas de ChatGPT/Gemini.",
+      severidade: "alto",
+    });
+  }
+  if (!geo.llmsTxtFound) {
+    problems.push({
+      categoria: "GEO",
+      titulo: "Arquivo /llms.txt ausente",
+      impacto: "Sem esse arquivo, robôs de IA não têm um resumo estruturado do seu negócio para citar.",
+      severidade: "medio",
+    });
+  }
+  if (!geo.llmsFullTxtFound) {
+    problems.push({
+      categoria: "GEO",
+      titulo: "Arquivo /llms-full.txt ausente",
+      impacto: "Modelos de linguagem ficam sem acesso a informações mais completas sobre a empresa.",
+      severidade: "baixo",
+    });
+  }
+  if (!geo.hasSemanticHtml) {
+    problems.push({
+      categoria: "GEO",
+      titulo: "Estrutura semântica HTML5 inadequada",
+      impacto: "Poucas tags como <main>, <article>, <section> dificultam a leitura do conteúdo por IAs.",
+      severidade: "medio",
+    });
+  }
+
+  if (!eeat.cnpjFound) {
+    problems.push({
+      categoria: "E-E-A-T",
+      titulo: "CNPJ da empresa não detectado no site",
+      impacto: "A falta de CNPJ visível reduz a credibilidade do site perante o Google e visitantes.",
+      severidade: "medio",
+    });
+  }
+  if (!eeat.privacyPolicyFound) {
+    problems.push({
+      categoria: "E-E-A-T",
+      titulo: "Política de privacidade não encontrada",
+      impacto: "Ausência de política de privacidade pode gerar bloqueios em anúncios e desconfiança dos visitantes.",
+      severidade: "medio",
+    });
+  }
+  if (!eeat.contactFound) {
+    problems.push({
+      categoria: "E-E-A-T",
+      titulo: "Informações de contato não encontradas",
+      impacto: "Dificulta a conversão direta de usuários e reduz a confiabilidade percebida do domínio.",
+      severidade: "medio",
+    });
+  }
+  if (!eeat.testimonialsFound) {
+    problems.push({
+      categoria: "E-E-A-T",
+      titulo: "Depoimentos ou avaliações de clientes não encontrados",
+      impacto: "A ausência de prova social dificulta a construção de confiança com novos visitantes.",
+      severidade: "baixo",
+    });
+  }
+  if (!eeat.faqFound) {
+    problems.push({
+      categoria: "E-E-A-T",
+      titulo: "Seção de perguntas frequentes (FAQ) não encontrada",
+      impacto: "FAQs ajudam a esclarecer dúvidas e qualificam o conteúdo para buscas por voz e IA.",
+      severidade: "baixo",
     });
   }
 

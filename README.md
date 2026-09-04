@@ -1,8 +1,9 @@
 # 🍋 LemonSEO
 
-Analise seu site em segundos: Velocidade, SEO, Mobile, Imagens, Subpáginas e Analytics —
-relatório completo em linguagem simples. MVP construído com Next.js (App Router) +
-TypeScript, estilizado com o design system **Lemon Tech**.
+Analise seu site em segundos: Velocidade, SEO, GEO (busca por IA), E-E-A-T, Imagens, Mobile,
+Analytics, Subpáginas, Palavra-chave e Semântica — relatório completo em linguagem simples.
+MVP construído com Next.js (App Router) + TypeScript, estilizado com o design system
+**Lemon Tech**.
 
 Ver o plano completo do produto em
 `~/.claude/plans/analise-essa-pasta-seo-fluttering-fairy.md`.
@@ -27,11 +28,14 @@ Copie `.env.example` para `.env.local` e preencha o que tiver disponível:
 
 ## Como funciona
 
-1. `POST /api/analyze` recebe a URL (+ palavra-chave opcional), busca o HTML do site, roda os
-   analisadores (`lib/analyzers/*`) e o PageSpeed Insights em paralelo, calcula as notas
-   (`lib/scoring.ts`) e salva o relatório.
+1. `POST /api/analyze` recebe a URL (+ palavra-chave opcional), busca o HTML do site e roda em
+   paralelo: PageSpeed Insights, SEO on-page, imagens (incluindo peso real via `HEAD` em cada
+   imagem), mobile, analytics, GEO (`/llms.txt`, `/llms-full.txt`, robots.txt, Schema.org,
+   HTML5 semântico), E-E-A-T (CNPJ, FAQ, depoimentos, política de privacidade, contato),
+   semântica (frequência de palavras, legibilidade) e até 10 subpáginas — cada uma analisada
+   individualmente (`lib/analyzers/*`). Calcula as notas (`lib/scoring.ts`) e salva o relatório.
 2. O usuário é redirecionado para `/analise/[slug]`, que renderiza o relatório salvo — link
-   permanente e compartilhável.
+   permanente e compartilhável, com 11 abas de detalhamento.
 3. Qualquer contato feito na tela de resultado (e-mail no modal, clique no WhatsApp) é
    registrado via `POST /api/lead`.
 
@@ -68,6 +72,5 @@ tela de progresso, anel de nota, abas, cards de métrica, botão de WhatsApp, mo
 - E-mail transacional (Resend) para o modal "Receber por e-mail" e notificação de novo lead.
 - Rate limiting / proteção contra abuso (Cloudflare Turnstile) no formulário público.
 - Exportação de PDF de verdade (hoje usa `window.print()`).
-- Abas de GEO, E-E-A-T e Semântica como diferencial de fase 2.
 
 Detalhes completos no plano em `~/.claude/plans/analise-essa-pasta-seo-fluttering-fairy.md`.
