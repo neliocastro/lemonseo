@@ -447,6 +447,12 @@ a {
   gap: 1rem;
   margin-bottom: 2rem;
 }
+/* Com o container mais largo (1200px), auto-fit sozinho deixaria 7 colunas
+   + 1 card órfão esticado numa linha só. Fixamos 4 colunas (2 linhas para
+   os 8 cards de categoria) a partir daqui em vez de depender do auto-fit. */
+@media (min-width: 900px) {
+  .ls-metric-grid { grid-template-columns: repeat(4, 1fr); }
+}
 .ls-metric-card {
   text-align: center;
   padding: 1.5rem 1rem;

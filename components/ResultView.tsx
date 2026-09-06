@@ -180,7 +180,7 @@ export function ResultView({ report }: { report: AnalysisReport }) {
   const imagesWeightScore = avgImageWeight === 0 ? 10 : avgImageWeight < 100_000 ? 10 : avgImageWeight < 300_000 ? 6 : 3;
 
   return (
-    <div className="ls-result-wrap" style={{ maxWidth: 1000, margin: "0 auto", padding: "2rem 1.5rem" }}>
+    <div className="ls-result-wrap" style={{ maxWidth: 1200, margin: "0 auto", padding: "2rem 1.5rem" }}>
       <div className="lt-card ls-hero-card" style={{ marginBottom: "1.5rem" }}>
         <div className="ls-hero-grid">
           <ScoreRing score={report.overallScore} size={130} />

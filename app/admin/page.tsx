@@ -38,7 +38,7 @@ export default async function AdminPage() {
         </div>
       </header>
 
-      <main style={{ maxWidth: 1100, margin: "0 auto", padding: "2rem 1.5rem" }}>
+      <main style={{ maxWidth: 1200, margin: "0 auto", padding: "2rem 1.5rem" }}>
         <section className="lt-card" style={{ marginBottom: "1.5rem" }}>
           <h3>Leads capturados ({sortedLeads.length})</h3>
           {sortedLeads.length === 0 ? (
