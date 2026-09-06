@@ -20,6 +20,17 @@ export function Footer() {
       <p style={{ marginTop: "1rem", opacity: 0.6 }}>
         © {new Date().getFullYear()} LemonSEO. Todos os direitos reservados.
       </p>
+      <p style={{ marginTop: ".4rem", fontSize: ".72rem", opacity: 0.5 }}>
+        Ícones por{" "}
+        <a href="https://icones.js.org/collection/solar" target="_blank" rel="noopener noreferrer">
+          Solar
+        </a>
+        , sob licença{" "}
+        <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener noreferrer">
+          CC BY 4.0
+        </a>
+        .
+      </p>
 
       {open && (
         <div className="ls-modal-backdrop" onClick={() => setOpen(false)}>
