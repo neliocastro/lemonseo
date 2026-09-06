@@ -234,11 +234,11 @@ export function ResultView({ report }: { report: AnalysisReport }) {
               )}
             </div>
 
-            <p className="ls-hero-footnote">
+            <a href="#analise-completa" className="ls-hero-footnote ls-hero-footnote-link">
               A nota geral representa uma média dos principais fatores analisados no site. Ela
               considera, de forma conjunta, Velocidade, SEO, Mobile, Imagens, GEO, E-E-A-T,
               Subpáginas e Analytics.
-            </p>
+            </a>
           </div>
 
           <div className="ls-hero-wpp-card">
@@ -833,7 +833,7 @@ export function ResultView({ report }: { report: AnalysisReport }) {
         </div>
       </div>
 
-      <div className="lt-card accent ls-disclaimer">
+      <div id="analise-completa" className="lt-card accent ls-disclaimer">
         <WarningTriangleIcon size={26} className="ls-disclaimer-icon" />
         <div>
           <h3>Por que esta análise é mais completa que um teste de velocidade comum?</h3>
