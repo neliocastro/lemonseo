@@ -24,7 +24,7 @@ export function EmailModal({ slug, onClose }: { slug: string; onClose: () => voi
         return;
       }
       setStatus("done");
-      setMessage("Recebemos seu contato! Em breve alguém da nossa equipe fala com você.");
+      setMessage("Recebemos seu contato! Em breve um especialista da nossa equipe vai falar com você por e-mail.");
     } catch {
       setStatus("error");
       setMessage("Erro de conexão ao enviar o e-mail.");
@@ -40,9 +40,10 @@ export function EmailModal({ slug, onClose }: { slug: string; onClose: () => voi
         <div style={{ color: "var(--lt-lime)", marginBottom: "0.75rem" }}>
           <LetterIcon size={38} />
         </div>
-        <h3 className="lt-title-sm">Receber relatório por e-mail</h3>
+        <h3 className="lt-title-sm">Receber contato por e-mail</h3>
         <p className="lt-body" style={{ margin: ".5rem 0 1.25rem" }}>
-          Deixe seu e-mail para receber o relatório completo e um contato da nossa equipe.
+          Deixe seu e-mail e um especialista da nossa equipe vai entrar em contato para te ajudar
+          a corrigir os pontos deste relatório.
         </p>
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: ".75rem" }}>
           <input
@@ -54,7 +55,7 @@ export function EmailModal({ slug, onClose }: { slug: string; onClose: () => voi
             onChange={(e) => setEmail(e.target.value)}
           />
           <button type="submit" className="lt-btn lt-btn-primary" style={{ justifyContent: "center" }} disabled={status === "sending" || status === "done"}>
-            {status === "sending" ? "Enviando..." : "Enviar relatório"}
+            {status === "sending" ? "Enviando..." : "Quero ser contatado"}
           </button>
         </form>
         {message && (
