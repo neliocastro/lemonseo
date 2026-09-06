@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Funnel_Display, Manrope, JetBrains_Mono } from "next/font/google";
+import { BackToTopButton } from "@/components/BackToTopButton";
 import "./globals.css";
 
 const funnelDisplay = Funnel_Display({
@@ -39,7 +40,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       data-theme="light"
       className={`${funnelDisplay.variable} ${manrope.variable} ${jetbrainsMono.variable}`}
     >
-      <body className="lt-theme">{children}</body>
+      <body className="lt-theme">
+        {children}
+        <BackToTopButton />
+      </body>
     </html>
   );
 }

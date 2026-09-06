@@ -575,6 +575,29 @@ a {
 .ls-wpp-btn:hover { transform: translateY(-1px); }
 .ls-wpp-btn svg { flex-shrink: 0; }
 
+/* ---------- Botão flutuante "voltar ao topo" ---------- */
+.ls-back-to-top {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 30;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--lt-slate);
+  color: var(--lt-lime);
+  border: 1px solid var(--lt-line);
+  cursor: pointer;
+  transition: transform .2s ease, border-color .2s ease;
+}
+.ls-back-to-top:hover { transform: translateY(-2px); border-color: var(--lt-lime); }
+@media (max-width: 640px) {
+  .ls-back-to-top { right: 1rem; bottom: 1rem; width: 42px; height: 42px; }
+}
+
 /* ---------- Aviso sobre o escopo da análise ---------- */
 .ls-disclaimer {
   margin-top: 1.5rem;
