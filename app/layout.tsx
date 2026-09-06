@@ -36,6 +36,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="pt-BR"
+      data-theme="light"
       className={`${funnelDisplay.variable} ${manrope.variable} ${jetbrainsMono.variable}`}
     >
       <body className="lt-theme">{children}</body>

@@ -5,14 +5,17 @@ import { useEffect, useState } from "react";
 const STORAGE_KEY = "lemonseo-admin-theme";
 
 export function ThemeToggle() {
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  // Light é o padrão do produto (definido em app/layout.tsx via
+  // data-theme="light"); o estado inicial aqui precisa combinar com isso
+  // para não haver flash de tema errado antes do efeito abaixo rodar.
+  const [theme, setTheme] = useState<"dark" | "light">("light");
 
   useEffect(() => {
     // Sincroniza o estado do React com o localStorage (sistema externo) na
     // montagem — o valor real só existe no cliente, por isso não dá para
     // calcular no primeiro render (SSR) sem causar um mismatch de hidratação.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setTheme(window.localStorage.getItem(STORAGE_KEY) === "light" ? "light" : "dark");
+    setTheme(window.localStorage.getItem(STORAGE_KEY) === "dark" ? "dark" : "light");
   }, []);
 
   useEffect(() => {
