@@ -42,7 +42,7 @@ export function EmailModal({ slug, onClose }: { slug: string; onClose: () => voi
         </div>
         <h3 className="lt-title-sm">Receber esta análise por e-mail</h3>
         <p className="lt-body" style={{ margin: ".5rem 0 1.25rem" }}>
-          Deixe seu e-mail para receber esta análise completa e um contato da nossa equipe.
+          Deixe seu e-mail para receber esta análise completa.
         </p>
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: ".75rem" }}>
           <input
