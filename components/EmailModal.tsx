@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CheckCircleIcon, LetterIcon } from "./icons";
 
 export function EmailModal({ slug, onClose }: { slug: string; onClose: () => void }) {
   const [email, setEmail] = useState("");
@@ -23,7 +24,7 @@ export function EmailModal({ slug, onClose }: { slug: string; onClose: () => voi
         return;
       }
       setStatus("done");
-      setMessage("✓ Recebemos seu contato! Em breve alguém da nossa equipe fala com você.");
+      setMessage("Recebemos seu contato! Em breve alguém da nossa equipe fala com você.");
     } catch {
       setStatus("error");
       setMessage("Erro de conexão ao enviar o e-mail.");
@@ -36,7 +37,9 @@ export function EmailModal({ slug, onClose }: { slug: string; onClose: () => voi
         <button className="ls-modal-close" onClick={onClose}>
           ×
         </button>
-        <span style={{ fontSize: "2.4rem", display: "block", marginBottom: "0.75rem" }}>📩</span>
+        <div style={{ color: "var(--lt-lime)", marginBottom: "0.75rem" }}>
+          <LetterIcon size={38} />
+        </div>
         <h3 className="lt-title-sm">Receber relatório por e-mail</h3>
         <p className="lt-body" style={{ margin: ".5rem 0 1.25rem" }}>
           Deixe seu e-mail para receber o relatório completo e um contato da nossa equipe.
@@ -56,6 +59,7 @@ export function EmailModal({ slug, onClose }: { slug: string; onClose: () => voi
         </form>
         {message && (
           <p style={{ marginTop: "1rem", fontWeight: 600, color: status === "error" ? "var(--lt-red)" : "var(--lt-lime)" }}>
+            {status === "done" && <CheckCircleIcon size={14} style={{ verticalAlign: "-2px", marginRight: ".3rem" }} />}
             {message}
           </p>
         )}

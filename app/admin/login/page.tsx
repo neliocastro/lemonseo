@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { LockIcon } from "@/components/icons";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -41,7 +42,10 @@ export default function AdminLoginPage() {
           <h2 className="lt-title-sm">Admin LemonSEO</h2>
         </div>
         <div className="ls-field">
-          <label>🔒 Senha</label>
+          <label>
+            <LockIcon size={15} style={{ verticalAlign: "-2px", marginRight: ".3rem" }} />
+            Senha
+          </label>
           <input
             type="password"
             className="ls-input"

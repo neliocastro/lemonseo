@@ -1,3 +1,5 @@
+import { CheckCircleIcon, WarningTriangleIcon, CloseCircleIcon } from "./icons";
+
 export function StatusCard({
   label,
   value,
@@ -9,7 +11,12 @@ export function StatusCard({
   note?: React.ReactNode;
   status: "ok" | "warn" | "critical" | "neutral";
 }) {
-  const icon = { ok: "✅", warn: "⚠️", critical: "❌", neutral: "—" }[status];
+  const icon = {
+    ok: <CheckCircleIcon size={16} />,
+    warn: <WarningTriangleIcon size={16} />,
+    critical: <CloseCircleIcon size={16} />,
+    neutral: <span style={{ opacity: 0.5 }}>—</span>,
+  }[status];
   return (
     <div className={`ls-check-card ${status}`}>
       <div className="ls-check-card-head">

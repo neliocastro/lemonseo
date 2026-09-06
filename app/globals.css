@@ -156,7 +156,7 @@ a {
   text-align: center;
   padding: 1.1rem .9rem;
 }
-.ls-feature-icon { font-size: 1.6rem; margin-bottom: .5rem; }
+.ls-feature-icon { color: var(--lt-lime); margin-bottom: .5rem; }
 .ls-feature-name { font-weight: 700; font-size: .85rem; color: var(--lt-text); margin-bottom: .2rem; }
 .ls-feature-desc { font-size: .74rem; color: var(--lt-muted); }
 
@@ -197,7 +197,19 @@ a {
 }
 .ls-step.done { color: var(--lt-lime); }
 .ls-step.active { color: var(--lt-text); font-weight: 600; }
-.ls-step-icon { width: 1.1rem; text-align: center; flex-shrink: 0; }
+.ls-step-icon { width: 1.1rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ls-step-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid var(--lt-muted);
+  display: inline-block;
+}
+.ls-spin { animation: ls-spin 1s linear infinite; }
+@keyframes ls-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
 
 /* ---------- Score ring ---------- */
 .ls-score-ring {
@@ -348,6 +360,10 @@ a {
   letter-spacing: .06em;
   color: var(--lt-muted);
 }
+.ls-check-card-head svg { display: block; }
+.ls-check-card.ok .ls-check-card-head svg { color: var(--lt-lime); }
+.ls-check-card.critical .ls-check-card-head svg { color: var(--lt-red); }
+.ls-check-card.warn .ls-check-card-head svg { color: var(--lt-muted); }
 .ls-check-card-value {
   font-weight: 600;
   color: var(--lt-text);
@@ -449,6 +465,9 @@ a {
   border-bottom: 1px solid var(--lt-line-soft);
 }
 .ls-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
   flex-shrink: 0;
   background: transparent;
   border: none;

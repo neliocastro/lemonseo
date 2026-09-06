@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { CheckCircleIcon, GlobeIcon, KeyIcon, RefreshIcon, SearchIcon } from "./icons";
 
 const STEPS = [
   "Conectando ao servidor",
@@ -76,7 +77,15 @@ export function LandingForm() {
                 key={step}
                 className={`ls-step ${i < stepIndex ? "done" : i === stepIndex ? "active" : ""}`}
               >
-                <span className="ls-step-icon">{i < stepIndex ? "✓" : i === stepIndex ? "⟳" : "○"}</span>
+                <span className="ls-step-icon">
+                  {i < stepIndex ? (
+                    <CheckCircleIcon size={15} />
+                  ) : i === stepIndex ? (
+                    <RefreshIcon size={15} className="ls-spin" />
+                  ) : (
+                    <span className="ls-step-dot" />
+                  )}
+                </span>
                 <span>{step}</span>
               </div>
             ))}
@@ -89,7 +98,10 @@ export function LandingForm() {
   return (
     <form onSubmit={handleSubmit} className="lt-card ls-form-card">
       <div className="ls-field">
-        <label>🌐 URL do seu site</label>
+        <label>
+          <GlobeIcon size={15} style={{ verticalAlign: "-2px", marginRight: ".3rem" }} />
+          URL do seu site
+        </label>
         <input
           type="text"
           placeholder="www.seusite.com.br"
@@ -104,7 +116,8 @@ export function LandingForm() {
       </div>
       <div className="ls-field">
         <label>
-          🔑 Palavra-chave para testar{" "}
+          <KeyIcon size={15} style={{ verticalAlign: "-2px", marginRight: ".3rem" }} />
+          Palavra-chave para testar{" "}
           <span style={{ color: "var(--lt-muted)", fontWeight: 400 }}>(opcional)</span>
           <span className="ls-badge-new">NOVO</span>
         </label>
@@ -125,7 +138,8 @@ export function LandingForm() {
         </div>
       )}
       <button type="submit" className="lt-btn lt-btn-primary ls-submit">
-        🔍 Analisar agora — é grátis
+        <SearchIcon size={18} />
+        Analisar agora — é grátis
       </button>
     </form>
   );

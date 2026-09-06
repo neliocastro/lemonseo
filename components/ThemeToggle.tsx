@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { MoonIcon, SunIcon } from "./icons";
 
 const STORAGE_KEY = "lemonseo-admin-theme";
 
@@ -35,10 +36,11 @@ export function ThemeToggle() {
     <button
       onClick={toggle}
       className="lt-btn lt-btn-ghost"
-      style={{ padding: ".5rem 1rem", fontSize: ".82rem" }}
+      style={{ padding: ".5rem 1rem", fontSize: ".82rem", gap: ".45rem" }}
       aria-label="Alternar tema claro/escuro"
     >
-      {theme === "light" ? "🌙 Modo escuro" : "☀️ Modo claro"}
+      {theme === "light" ? <MoonIcon size={16} /> : <SunIcon size={16} />}
+      {theme === "light" ? "Modo escuro" : "Modo claro"}
     </button>
   );
 }

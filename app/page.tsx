@@ -1,14 +1,15 @@
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { LandingForm } from "@/components/LandingForm";
+import { BoltIcon, ChartIcon, GalleryIcon, DocumentsIcon, SearchIcon, SmartphoneIcon } from "@/components/icons";
 
 const FEATURES = [
-  { icon: "⚡", name: "Velocidade", desc: "Tempo de carregamento" },
-  { icon: "🔍", name: "SEO Completo", desc: "Meta tags, headings, links" },
-  { icon: "🖼️", name: "Imagens", desc: "Formato, peso e ALT" },
-  { icon: "📱", name: "Mobile", desc: "Viewport e responsividade" },
-  { icon: "📑", name: "Subpáginas", desc: "Analisa até 10 páginas" },
-  { icon: "📊", name: "Analytics", desc: "GA4, GTM, Meta Pixel e mais" },
+  { icon: BoltIcon, name: "Velocidade", desc: "Tempo de carregamento" },
+  { icon: SearchIcon, name: "SEO Completo", desc: "Meta tags, headings, links" },
+  { icon: GalleryIcon, name: "Imagens", desc: "Formato, peso e ALT" },
+  { icon: SmartphoneIcon, name: "Mobile", desc: "Viewport e responsividade" },
+  { icon: DocumentsIcon, name: "Subpáginas", desc: "Analisa até 20 páginas" },
+  { icon: ChartIcon, name: "Analytics", desc: "GA4, GTM, Meta Pixel e mais" },
 ];
 
 export default function Home() {
@@ -33,7 +34,9 @@ export default function Home() {
         <div className="ls-features">
           {FEATURES.map((f) => (
             <div key={f.name} className="lt-card ls-feature">
-              <div className="ls-feature-icon">{f.icon}</div>
+              <div className="ls-feature-icon">
+                <f.icon size={24} />
+              </div>
               <div className="ls-feature-name">{f.name}</div>
               <div className="ls-feature-desc">{f.desc}</div>
             </div>

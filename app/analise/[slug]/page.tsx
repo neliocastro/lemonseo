@@ -3,6 +3,7 @@ import { getReport } from "@/lib/store";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ResultView } from "@/components/ResultView";
+import { WarningTriangleIcon } from "@/components/icons";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -33,7 +34,9 @@ export default async function AnalisePage({
       <>
         <Header />
         <main className="ls-error-box lt-card">
-          <div style={{ fontSize: "2.2rem", marginBottom: ".5rem" }}>⚠️</div>
+          <div style={{ color: "var(--lt-red)", marginBottom: ".5rem" }}>
+            <WarningTriangleIcon size={36} />
+          </div>
           <h2 className="lt-title-sm">Relatório não encontrado</h2>
           <p className="lt-body" style={{ margin: "1rem 0" }}>
             Esse link pode ter expirado ou o relatório não existe mais.

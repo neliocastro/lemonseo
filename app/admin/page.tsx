@@ -2,6 +2,7 @@ import Link from "next/link";
 import { listLeads, listReports } from "@/lib/store";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AdminLogoutButton } from "@/components/AdminLogoutButton";
+import { ChatIcon, LetterIcon, LockIcon } from "@/components/icons";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +28,10 @@ export default async function AdminPage() {
         <Link href="/" className="ls-header-logo">
           🍋 LemonSEO
         </Link>
-        <span className="ls-header-site">🔒 Admin</span>
+        <span className="ls-header-site">
+          <LockIcon size={13} style={{ verticalAlign: "-2px", marginRight: ".3rem" }} />
+          Admin
+        </span>
         <div style={{ marginLeft: "auto", display: "flex", gap: ".6rem" }}>
           <ThemeToggle />
           <AdminLogoutButton />
@@ -57,7 +61,10 @@ export default async function AdminPage() {
                   {sortedLeads.map((lead) => (
                     <tr key={lead.id}>
                       <td>{lead.url}</td>
-                      <td>{lead.canal === "email" ? "📩 E-mail" : "💬 WhatsApp"}</td>
+                      <td style={{ display: "flex", alignItems: "center", gap: ".4rem" }}>
+                        {lead.canal === "email" ? <LetterIcon size={14} /> : <ChatIcon size={14} />}
+                        {lead.canal === "email" ? "E-mail" : "WhatsApp"}
+                      </td>
                       <td>{lead.email || "—"}</td>
                       <td>{formatDate(lead.createdAt)}</td>
                       <td>

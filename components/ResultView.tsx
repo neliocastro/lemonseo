@@ -8,11 +8,47 @@ import { ScoreBar } from "./ScoreBar";
 import { StatusCard } from "./StatusCard";
 import { EmailModal } from "./EmailModal";
 import { WhatsAppCtaButton } from "./WhatsAppButton";
+import {
+  BoltIcon,
+  BrainIcon,
+  CalendarIcon,
+  ChartIcon,
+  CheckCircleIcon,
+  CloseCircleIcon,
+  CpuBoltIcon,
+  DangerCircleIcon,
+  DocumentsIcon,
+  GalleryIcon,
+  HashtagIcon,
+  InfoCircleIcon,
+  KeyIcon,
+  LetterIcon,
+  LightbulbIcon,
+  LinkIcon,
+  ListIcon,
+  PrinterIcon,
+  RocketIcon,
+  SearchIcon,
+  SmartphoneIcon,
+  StarIcon,
+  WarningTriangleIcon,
+} from "./icons";
 
-const SEVERITY_LABEL: Record<Severity, { icon: string; label: string }> = {
-  alto: { icon: "🔴", label: "Alto impacto" },
-  medio: { icon: "🟡", label: "Médio impacto" },
-  baixo: { icon: "🟢", label: "Baixo impacto" },
+const SEVERITY_LABEL: Record<Severity, { icon: typeof CheckCircleIcon; color: string; label: string }> = {
+  alto: { icon: DangerCircleIcon, color: "var(--lt-red)", label: "Alto impacto" },
+  medio: { icon: WarningTriangleIcon, color: "var(--lt-muted)", label: "Médio impacto" },
+  baixo: { icon: CheckCircleIcon, color: "var(--lt-lime)", label: "Baixo impacto" },
+};
+
+const CATEGORY_ICONS: Record<string, typeof CheckCircleIcon> = {
+  velocidade: BoltIcon,
+  seo: SearchIcon,
+  mobile: SmartphoneIcon,
+  imagens: GalleryIcon,
+  geo: CpuBoltIcon,
+  eeat: StarIcon,
+  subpaginas: DocumentsIcon,
+  analytics: ChartIcon,
 };
 
 function heroMessage(score: number): string {
@@ -40,16 +76,22 @@ function ProblemGroup({ severity, problems }: { severity: Severity; problems: Pr
   const meta = SEVERITY_LABEL[severity];
   return (
     <div>
-      <div className="ls-problem-group-title">
-        {meta.icon} {meta.label} <span style={{ opacity: 0.6, fontWeight: 400, fontSize: ".8rem" }}>({problems.length})</span>
+      <div className="ls-problem-group-title" style={{ color: meta.color }}>
+        <meta.icon size={16} style={{ verticalAlign: "-3px", marginRight: ".4rem" }} />
+        {meta.label} <span style={{ opacity: 0.6, fontWeight: 400, fontSize: ".8rem" }}>({problems.length})</span>
       </div>
       {problems.map((p, i) => (
         <div className="ls-problem-item" key={i}>
-          <div className="ls-problem-icon">❌</div>
+          <div className="ls-problem-icon">
+            <CloseCircleIcon size={16} />
+          </div>
           <div>
             <div className="ls-problem-cat">{p.categoria}</div>
             <div className="ls-problem-title">{p.titulo}</div>
-            <div className="ls-problem-impact">💡 {p.impacto}</div>
+            <div className="ls-problem-impact">
+              <LightbulbIcon size={13} style={{ verticalAlign: "-2px", marginRight: ".3rem" }} />
+              {p.impacto}
+            </div>
           </div>
         </div>
       ))}
@@ -80,17 +122,17 @@ function subpageScore(page: SubpageResult): number {
 }
 
 const TABS = [
-  { key: "problemas", label: "🚨 Problemas" },
-  { key: "velocidade", label: "⚡ Velocidade" },
-  { key: "seo", label: "🔍 SEO" },
-  { key: "geo", label: "🤖 GEO" },
-  { key: "eeat", label: "⭐ E-E-A-T" },
-  { key: "imagens", label: "🖼️ Imagens" },
-  { key: "mobile", label: "📱 Mobile" },
-  { key: "analytics", label: "📊 Analytics" },
-  { key: "subpaginas", label: "📑 Subpáginas" },
-  { key: "keyword", label: "🔑 Palavra-chave" },
-  { key: "semantica", label: "🧠 Semântica" },
+  { key: "problemas", label: "Problemas", icon: DangerCircleIcon },
+  { key: "velocidade", label: "Velocidade", icon: BoltIcon },
+  { key: "seo", label: "SEO", icon: SearchIcon },
+  { key: "geo", label: "GEO", icon: CpuBoltIcon },
+  { key: "eeat", label: "E-E-A-T", icon: StarIcon },
+  { key: "imagens", label: "Imagens", icon: GalleryIcon },
+  { key: "mobile", label: "Mobile", icon: SmartphoneIcon },
+  { key: "analytics", label: "Analytics", icon: ChartIcon },
+  { key: "subpaginas", label: "Subpáginas", icon: DocumentsIcon },
+  { key: "keyword", label: "Palavra-chave", icon: KeyIcon },
+  { key: "semantica", label: "Semântica", icon: BrainIcon },
 ] as const;
 
 export function ResultView({ report }: { report: AnalysisReport }) {
@@ -146,8 +188,11 @@ export function ResultView({ report }: { report: AnalysisReport }) {
           <div className="ls-hero-main">
             <div className="ls-result-url">{report.finalUrl}</div>
             <h2 className="lt-title-sm ls-hero-headline" style={{ marginTop: ".4rem" }}>
+              {alto.length > 0 && (
+                <DangerCircleIcon size={22} style={{ color: "var(--lt-red)", verticalAlign: "-4px", marginRight: ".4rem" }} />
+              )}
               {alto.length > 0
-                ? "🚨 Atenção: identificamos falhas que podem prejudicar seu tráfego no Google e a citação do site por IAs como ChatGPT, Gemini e Copilot."
+                ? "Atenção: identificamos falhas que podem prejudicar seu tráfego no Google e a citação do site por IAs como ChatGPT, Gemini e Copilot."
                 : heroMessage(report.overallScore)}
             </h2>
 
@@ -156,22 +201,38 @@ export function ResultView({ report }: { report: AnalysisReport }) {
                 <hr className="ls-hero-divider" />
                 <div className="ls-hero-failures-title">Principais falhas no site</div>
                 <ul className="ls-hero-failures-list">
-                  {report.problems.slice(0, 6).map((p, i) => (
-                    <li key={i}>
-                      <span>{SEVERITY_LABEL[p.severidade].icon}</span>
-                      <span>
-                        <strong>{p.categoria}:</strong> {p.titulo}
-                      </span>
-                    </li>
-                  ))}
+                  {report.problems.slice(0, 6).map((p, i) => {
+                    const meta = SEVERITY_LABEL[p.severidade];
+                    return (
+                      <li key={i}>
+                        <span style={{ color: meta.color }}>
+                          <meta.icon size={16} />
+                        </span>
+                        <span>
+                          <strong>{p.categoria}:</strong> {p.titulo}
+                        </span>
+                      </li>
+                    );
+                  })}
                 </ul>
               </>
             )}
 
             <div className="ls-hero-meta-badges">
-              <span className="ls-meta-pill">📅 {formatReportDate(report.createdAt)}</span>
-              <span className="ls-meta-pill">📑 {report.subpages.length} subpágina(s)</span>
-              {report.keyword && <span className="ls-meta-pill">🔑 {report.keyword}</span>}
+              <span className="ls-meta-pill">
+                <CalendarIcon size={13} style={{ verticalAlign: "-2px", marginRight: ".3rem" }} />
+                {formatReportDate(report.createdAt)}
+              </span>
+              <span className="ls-meta-pill">
+                <DocumentsIcon size={13} style={{ verticalAlign: "-2px", marginRight: ".3rem" }} />
+                {report.subpages.length} subpágina(s)
+              </span>
+              {report.keyword && (
+                <span className="ls-meta-pill">
+                  <KeyIcon size={13} style={{ verticalAlign: "-2px", marginRight: ".3rem" }} />
+                  {report.keyword}
+                </span>
+              )}
             </div>
 
             <p className="ls-hero-footnote">
@@ -182,7 +243,10 @@ export function ResultView({ report }: { report: AnalysisReport }) {
           </div>
 
           <div className="ls-hero-wpp-card">
-            <span className="lt-eyebrow">⚡ Diagnóstico WhatsApp</span>
+            <span className="lt-eyebrow">
+              <BoltIcon size={13} style={{ verticalAlign: "-2px", marginRight: ".3rem" }} />
+              Diagnóstico WhatsApp
+            </span>
             <h3 className="lt-title-sm" style={{ fontSize: "1.15rem", marginTop: ".5rem" }}>
               {alto.length > 0 ? "Corrija as falhas e atinja nota 10" : "Quer chegar à nota 10?"}
             </h3>
@@ -197,28 +261,37 @@ export function ResultView({ report }: { report: AnalysisReport }) {
 
       <div className="ls-actions">
         <button className="lt-btn lt-btn-ghost" onClick={() => window.print()}>
-          🖨️ Exportar PDF
+          <PrinterIcon size={16} />
+          Exportar PDF
         </button>
         <button className="lt-btn lt-btn-ghost" onClick={() => setShowEmailModal(true)}>
-          📩 Receber por e-mail
+          <LetterIcon size={16} />
+          Receber por e-mail
         </button>
         <button className="lt-btn lt-btn-ghost" onClick={copyLink}>
-          🔗 Compartilhar
+          <LinkIcon size={16} />
+          Compartilhar
         </button>
         <Link href="/" className="lt-btn lt-btn-ghost">
-          🔍 Analisar outro site
+          <SearchIcon size={16} />
+          Analisar outro site
         </Link>
       </div>
 
       <div className="ls-metric-grid">
-        {report.categories.map((c) => (
-          <div className="lt-card ls-metric-card" key={c.key}>
-            <div className="ls-metric-icon">{c.icon}</div>
-            <div className="ls-metric-label">{c.label}</div>
-            <ScoreRing score={c.score} size={68} />
-            <div className="ls-metric-detail">{c.detail}</div>
-          </div>
-        ))}
+        {report.categories.map((c) => {
+          const CategoryIcon = CATEGORY_ICONS[c.key] ?? ChartIcon;
+          return (
+            <div className="lt-card ls-metric-card" key={c.key}>
+              <div className="ls-metric-icon">
+                <CategoryIcon size={22} />
+              </div>
+              <div className="ls-metric-label">{c.label}</div>
+              <ScoreRing score={c.score} size={68} />
+              <div className="ls-metric-detail">{c.detail}</div>
+            </div>
+          );
+        })}
       </div>
 
       <nav className="ls-tabs-nav">
@@ -228,6 +301,7 @@ export function ResultView({ report }: { report: AnalysisReport }) {
             className={`ls-tab-btn ${tab === t.key ? "active" : ""}`}
             onClick={() => setTab(t.key)}
           >
+            <t.icon size={15} />
             {t.label}
           </button>
         ))}
@@ -236,17 +310,30 @@ export function ResultView({ report }: { report: AnalysisReport }) {
       {tab === "problemas" && (
         <div>
           <p className="lt-body" style={{ marginBottom: "1rem" }}>
-            📋 Listamos todos os problemas encontrados, do mais crítico ao menos urgente. Os de{" "}
+            <ListIcon size={14} style={{ verticalAlign: "-2px", marginRight: ".3rem" }} />
+            Listamos todos os problemas encontrados, do mais crítico ao menos urgente. Os de{" "}
             <strong style={{ color: "var(--lt-text)" }}>alto impacto</strong> afetam diretamente o
             Google — comece por eles.
           </p>
           <div className="ls-problem-counters">
-            <span className="lt-badge alert">🔴 {alto.length} alto impacto</span>
-            <span className="lt-badge">🟡 {medio.length} médio impacto</span>
-            <span className="lt-badge">🟢 {baixo.length} baixo impacto</span>
+            <span className="lt-badge alert">
+              <DangerCircleIcon size={13} style={{ verticalAlign: "-2px", marginRight: ".3rem" }} />
+              {alto.length} alto impacto
+            </span>
+            <span className="lt-badge">
+              <WarningTriangleIcon size={13} style={{ verticalAlign: "-2px", marginRight: ".3rem" }} />
+              {medio.length} médio impacto
+            </span>
+            <span className="lt-badge">
+              <CheckCircleIcon size={13} style={{ verticalAlign: "-2px", marginRight: ".3rem" }} />
+              {baixo.length} baixo impacto
+            </span>
           </div>
           {report.problems.length === 0 ? (
-            <p className="lt-body">Nenhum problema relevante encontrado. 🎉</p>
+            <p className="lt-body">
+              <CheckCircleIcon size={16} style={{ color: "var(--lt-lime)", verticalAlign: "-3px", marginRight: ".4rem" }} />
+              Nenhum problema relevante encontrado.
+            </p>
           ) : (
             <>
               <ProblemGroup severity="alto" problems={alto} />
@@ -257,7 +344,10 @@ export function ResultView({ report }: { report: AnalysisReport }) {
 
           {report.problems.length > 0 && (
             <div className="lt-card accent" style={{ marginTop: "2rem" }}>
-              <h3>✅ Benefícios de resolver as correções</h3>
+              <h3>
+                <CheckCircleIcon size={18} style={{ verticalAlign: "-3px", marginRight: ".4rem" }} />
+                Benefícios de resolver as correções
+              </h3>
               <div className="lt-blist" style={{ marginTop: ".5rem" }}>
                 <div className="ls-benefit-row">
                   <span className="lt-bdot" />
@@ -283,7 +373,10 @@ export function ResultView({ report }: { report: AnalysisReport }) {
 
       {tab === "velocidade" && (
         <div className="lt-card">
-          <h3>⚡ Análise de Velocidade</h3>
+          <h3>
+            <BoltIcon size={18} style={{ verticalAlign: "-3px", marginRight: ".4rem" }} />
+            Análise de Velocidade
+          </h3>
           <p className="lt-body">
             Fonte dos dados:{" "}
             {speed.source === "pagespeed"
@@ -333,7 +426,8 @@ export function ResultView({ report }: { report: AnalysisReport }) {
           </div>
 
           <div className="lt-prompt" style={{ marginTop: "1.5rem" }}>
-            💡 Referência (tempo de carregamento completo): Excelente {"< 1.5s"} · Bom 1.5s–2.5s · Regular 2.5s–4.5s ·
+            <LightbulbIcon size={14} style={{ verticalAlign: "-2px", marginRight: ".3rem" }} />
+            Referência (tempo de carregamento completo): Excelente {"< 1.5s"} · Bom 1.5s–2.5s · Regular 2.5s–4.5s ·
             Lento {"> 4.5s"}
           </div>
         </div>
@@ -341,7 +435,10 @@ export function ResultView({ report }: { report: AnalysisReport }) {
 
       {tab === "seo" && (
         <div className="lt-card">
-          <h3>🔍 Análise SEO Completa</h3>
+          <h3>
+            <SearchIcon size={18} style={{ verticalAlign: "-3px", marginRight: ".4rem" }} />
+            Análise SEO Completa
+          </h3>
           <p className="lt-body">Verificação dos principais fatores de ranqueamento no Google.</p>
 
           <div className="ls-check-grid">
@@ -371,14 +468,20 @@ export function ResultView({ report }: { report: AnalysisReport }) {
             <StatusCard label="Feed RSS/Atom" value={seo.rssFeedFound ? "Encontrado" : "Não encontrado"} status="neutral" />
           </div>
 
-          <h3 style={{ marginTop: "2rem" }}>📌 Estrutura de títulos (headings)</h3>
+          <h3 style={{ marginTop: "2rem" }}>
+            <ListIcon size={16} style={{ verticalAlign: "-3px", marginRight: ".4rem" }} />
+            Estrutura de títulos (headings)
+          </h3>
           <div className="ls-check-grid">
             <StatusCard label="<H1>" value={seo.h1Count} note={seo.h1Text} status={seo.h1Count === 1 ? "ok" : "critical"} />
             <StatusCard label="<H2>" value={seo.h2Count} status={seo.h2Count > 0 ? "ok" : "warn"} />
             <StatusCard label="<H3>" value={seo.h3Count} status="neutral" />
           </div>
 
-          <h3 style={{ marginTop: "2rem" }}>📊 Pontuação SEO detalhada</h3>
+          <h3 style={{ marginTop: "2rem" }}>
+            <ChartIcon size={16} style={{ verticalAlign: "-3px", marginRight: ".4rem" }} />
+            Pontuação SEO detalhada
+          </h3>
           <div style={{ marginTop: "1rem" }}>
             <ScoreBar label="Meta Tags" weightPct={30} score={metaTagsScore} />
             <ScoreBar label="Headings (H1/H2/H3)" weightPct={20} score={headingsScore} />
@@ -390,7 +493,10 @@ export function ResultView({ report }: { report: AnalysisReport }) {
 
       {tab === "geo" && (
         <div className="lt-card">
-          <h3>🤖 Otimização para Busca por Inteligência Artificial (GEO)</h3>
+          <h3>
+            <CpuBoltIcon size={18} style={{ verticalAlign: "-3px", marginRight: ".4rem" }} />
+            Otimização para Busca por Inteligência Artificial (GEO)
+          </h3>
           <p className="lt-body">Avaliação da visibilidade da sua marca para ChatGPT, Gemini e Perplexity.</p>
 
           <div className="ls-check-grid">
@@ -437,7 +543,8 @@ export function ResultView({ report }: { report: AnalysisReport }) {
           </div>
 
           <div className="lt-prompt" style={{ marginTop: "1.5rem" }}>
-            🤖 <b>O que é GEO?</b> Mais buscas de usuários já começam em respostas diretas geradas por IA. O GEO
+            <CpuBoltIcon size={14} style={{ verticalAlign: "-2px", marginRight: ".3rem" }} />
+            <b>O que é GEO?</b> Mais buscas de usuários já começam em respostas diretas geradas por IA. O GEO
             prepara o site estruturalmente para que ChatGPT, Gemini e Perplexity consigam ler o conteúdo e
             recomendar a empresa nas respostas.
           </div>
@@ -446,7 +553,10 @@ export function ResultView({ report }: { report: AnalysisReport }) {
 
       {tab === "eeat" && (
         <div className="lt-card">
-          <h3>⭐ Experiência, Autoridade e Confiabilidade (E-E-A-T)</h3>
+          <h3>
+            <StarIcon size={18} style={{ verticalAlign: "-3px", marginRight: ".4rem" }} />
+            Experiência, Autoridade e Confiabilidade (E-E-A-T)
+          </h3>
           <p className="lt-body">Critérios de autoria, segurança e reputação institucional exigidos pelo Google e pelas IAs.</p>
 
           <div className="ls-check-grid">
@@ -489,7 +599,8 @@ export function ResultView({ report }: { report: AnalysisReport }) {
           </div>
 
           <div className="lt-prompt" style={{ marginTop: "1.5rem" }}>
-            ⭐ <b>O que significa E-E-A-T?</b> Experience, Expertise, Authoritativeness, Trustworthiness. O Google e
+            <StarIcon size={14} style={{ verticalAlign: "-2px", marginRight: ".3rem" }} />
+            <b>O que significa E-E-A-T?</b> Experience, Expertise, Authoritativeness, Trustworthiness. O Google e
             as IAs priorizam indicar empresas legítimas e seguras — contato claro, política de privacidade, provas
             sociais e CNPJ visível são os pilares para ganhar relevância.
           </div>
@@ -498,7 +609,10 @@ export function ResultView({ report }: { report: AnalysisReport }) {
 
       {tab === "imagens" && (
         <div className="lt-card">
-          <h3>🖼️ Análise de Imagens</h3>
+          <h3>
+            <GalleryIcon size={18} style={{ verticalAlign: "-3px", marginRight: ".4rem" }} />
+            Análise de Imagens
+          </h3>
           <p className="lt-body">
             {images.total} imagens analisadas · {images.total > 0 ? Math.round(((images.total - images.withoutAlt) / images.total) * 100) : 0}% com ALT ·{" "}
             {images.modernFormat + images.legacyFormat > 0 ? Math.round((images.modernFormat / (images.modernFormat + images.legacyFormat)) * 100) : 0}% em formato moderno
@@ -540,7 +654,7 @@ export function ResultView({ report }: { report: AnalysisReport }) {
                       <td style={{ maxWidth: 220, overflow: "hidden", textOverflow: "ellipsis" }}>{img.src.split("/").pop()}</td>
                       <td className="lt-tool">{img.format}</td>
                       <td>{img.weightBytes != null ? formatBytes(img.weightBytes) : "—"}</td>
-                      <td>{img.hasAlt ? "✅" : "❌"}</td>
+                      <td>{img.hasAlt ? <CheckCircleIcon size={16} style={{ color: "var(--lt-lime)" }} /> : <CloseCircleIcon size={16} style={{ color: "var(--lt-red)" }} />}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -552,7 +666,10 @@ export function ResultView({ report }: { report: AnalysisReport }) {
 
       {tab === "mobile" && (
         <div className="lt-card">
-          <h3>📱 Análise de Responsividade Mobile</h3>
+          <h3>
+            <SmartphoneIcon size={18} style={{ verticalAlign: "-3px", marginRight: ".4rem" }} />
+            Análise de Responsividade Mobile
+          </h3>
           <div className="ls-check-grid">
             <StatusCard
               label="Meta viewport"
@@ -575,7 +692,8 @@ export function ResultView({ report }: { report: AnalysisReport }) {
           </div>
 
           <div className="lt-prompt" style={{ marginTop: "1.5rem" }}>
-            📱 Mais de 65% das buscas no Google são feitas pelo celular. O Google usa o Mobile-First Indexing — ele
+            <SmartphoneIcon size={14} style={{ verticalAlign: "-2px", marginRight: ".3rem" }} />
+            Mais de 65% das buscas no Google são feitas pelo celular. O Google usa o Mobile-First Indexing — ele
             avalia a versão mobile para definir o posicionamento em todos os dispositivos.
           </div>
         </div>
@@ -583,7 +701,10 @@ export function ResultView({ report }: { report: AnalysisReport }) {
 
       {tab === "analytics" && (
         <div className="lt-card">
-          <h3>📊 Analytics &amp; Rastreamento</h3>
+          <h3>
+            <ChartIcon size={18} style={{ verticalAlign: "-3px", marginRight: ".4rem" }} />
+            Analytics &amp; Rastreamento
+          </h3>
           <p className="lt-body">Ferramentas de monitoramento detectadas no site.</p>
           <div className="ls-check-grid">
             <StatusCard label="Google Analytics 4" value={analytics.ga4Id || "Não instalado"} status={analytics.ga4 ? "ok" : "critical"} />
@@ -598,7 +719,10 @@ export function ResultView({ report }: { report: AnalysisReport }) {
 
       {tab === "subpaginas" && (
         <div className="lt-card">
-          <h3>📑 Análise de Subpáginas</h3>
+          <h3>
+            <DocumentsIcon size={18} style={{ verticalAlign: "-3px", marginRight: ".4rem" }} />
+            Análise de Subpáginas
+          </h3>
           <p className="lt-body">{subpages.length} página(s) interna(s) analisada(s).</p>
           {subpages.length === 0 ? (
             <p className="lt-body" style={{ marginTop: "1rem" }}>
@@ -628,7 +752,8 @@ export function ResultView({ report }: { report: AnalysisReport }) {
                       </div>
                     ) : (
                       <p className="lt-body" style={{ marginTop: ".6rem", fontSize: ".82rem" }}>
-                        ✅ Nenhum problema encontrado nessa página.
+                        <CheckCircleIcon size={14} style={{ color: "var(--lt-lime)", verticalAlign: "-2px", marginRight: ".3rem" }} />
+                        Nenhum problema encontrado nessa página.
                       </p>
                     )}
                   </div>
@@ -641,7 +766,10 @@ export function ResultView({ report }: { report: AnalysisReport }) {
 
       {tab === "keyword" && keywordResult && (
         <div className="lt-card">
-          <h3>🔑 Análise de Palavra-chave: &ldquo;{keywordResult.keyword}&rdquo;</h3>
+          <h3>
+            <KeyIcon size={18} style={{ verticalAlign: "-3px", marginRight: ".4rem" }} />
+            Análise de Palavra-chave: &ldquo;{keywordResult.keyword}&rdquo;
+          </h3>
           <div className="ls-check-grid">
             <StatusCard label="Presente no título" value={keywordResult.inTitle ? "Sim" : "Não"} status={keywordResult.inTitle ? "ok" : "critical"} />
             <StatusCard label="Presente no H1" value={keywordResult.inH1 ? "Sim" : "Não"} status={keywordResult.inH1 ? "ok" : "critical"} />
@@ -657,7 +785,10 @@ export function ResultView({ report }: { report: AnalysisReport }) {
 
       {tab === "semantica" && (
         <div className="lt-card">
-          <h3>🧠 Análise Semântica</h3>
+          <h3>
+            <BrainIcon size={18} style={{ verticalAlign: "-3px", marginRight: ".4rem" }} />
+            Análise Semântica
+          </h3>
           <p className="lt-body">Palavras-chave e estrutura de conteúdo — o que o Google lê para entender o seu negócio.</p>
           <div className="ls-check-grid">
             <StatusCard label="Total de palavras" value={semantics.totalWords} status="neutral" />
@@ -668,7 +799,10 @@ export function ResultView({ report }: { report: AnalysisReport }) {
 
           {semantics.topWords.length > 0 && (
             <>
-              <h3 style={{ marginTop: "2rem" }}>🔠 Top 10 palavras mais frequentes</h3>
+              <h3 style={{ marginTop: "2rem" }}>
+                <HashtagIcon size={16} style={{ verticalAlign: "-3px", marginRight: ".4rem" }} />
+                Top 10 palavras mais frequentes
+              </h3>
               <p className="lt-body" style={{ fontSize: ".82rem" }}>
                 Estas são as palavras que o Google mais associa ao seu site.
               </p>
@@ -686,7 +820,9 @@ export function ResultView({ report }: { report: AnalysisReport }) {
 
       <div className="ls-cta-final">
         <div className="lt-card accent">
-          <div style={{ fontSize: "2rem", marginBottom: ".5rem" }}>🚀</div>
+          <div style={{ color: "var(--lt-lime)", marginBottom: ".5rem" }}>
+            <RocketIcon size={32} />
+          </div>
           <h3 className="lt-title-sm">Vamos melhorar o seu site?</h3>
           <p className="lt-body" style={{ margin: ".75rem 0 1.25rem" }}>
             Fale agora com nossos especialistas e descubra como levar seu site à nota máxima.
@@ -699,7 +835,10 @@ export function ResultView({ report }: { report: AnalysisReport }) {
       </div>
 
       <div className="lt-card ls-disclaimer">
-        <h3 style={{ fontSize: "1rem" }}>⚠️ Por que essa análise vai além do PageSpeed Insights?</h3>
+        <h3 style={{ fontSize: "1rem" }}>
+          <InfoCircleIcon size={16} style={{ verticalAlign: "-3px", marginRight: ".4rem" }} />
+          Por que essa análise vai além do PageSpeed Insights?
+        </h3>
         <p className="lt-body" style={{ marginTop: ".6rem", fontSize: ".85rem" }}>
           Além da página inicial, avaliamos subpáginas, SEO, GEO, E-E-A-T e outros critérios
           técnicos e de conteúdo. Alguns desses fatores são recentes, acompanhando a evolução da

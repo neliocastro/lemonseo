@@ -144,14 +144,14 @@ export function buildCategories(input: ScoringInput): CategoryScore[] {
   const eeat = scoreEeat(input.eeat);
 
   return [
-    { key: "velocidade", label: "Velocidade", icon: "⚡", score: speed.score, detail: speed.detail },
-    { key: "seo", label: "SEO", icon: "🔍", score: seo.score, detail: seo.detail },
-    { key: "mobile", label: "Mobile", icon: "📱", score: mobile.score, detail: mobile.detail },
-    { key: "imagens", label: "Imagens", icon: "🖼️", score: images.score, detail: images.detail },
-    { key: "geo", label: "GEO", icon: "🤖", score: geo.score, detail: geo.detail },
-    { key: "eeat", label: "E-E-A-T", icon: "⭐", score: eeat.score, detail: eeat.detail },
-    { key: "subpaginas", label: "Subpáginas", icon: "📑", score: subpages.score, detail: subpages.detail },
-    { key: "analytics", label: "Analytics", icon: "📊", score: analytics.score, detail: analytics.detail },
+    { key: "velocidade", label: "Velocidade", score: speed.score, detail: speed.detail },
+    { key: "seo", label: "SEO", score: seo.score, detail: seo.detail },
+    { key: "mobile", label: "Mobile", score: mobile.score, detail: mobile.detail },
+    { key: "imagens", label: "Imagens", score: images.score, detail: images.detail },
+    { key: "geo", label: "GEO", score: geo.score, detail: geo.detail },
+    { key: "eeat", label: "E-E-A-T", score: eeat.score, detail: eeat.detail },
+    { key: "subpaginas", label: "Subpáginas", score: subpages.score, detail: subpages.detail },
+    { key: "analytics", label: "Analytics", score: analytics.score, detail: analytics.detail },
   ];
 }
 

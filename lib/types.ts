@@ -10,7 +10,6 @@ export interface Problem {
 export interface CategoryScore {
   key: string;
   label: string;
-  icon: string;
   score: number; // 0-10
   detail: string;
 }
