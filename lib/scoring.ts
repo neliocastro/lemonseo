@@ -2,6 +2,7 @@ import type {
   AnalysisReport,
   AnalyticsResult,
   CategoryScore,
+  CmsData,
   EeatData,
   GeoData,
   KeywordResult,
@@ -30,6 +31,7 @@ interface ScoringInput {
   keywordResult: KeywordResult | null;
   geo: GeoData;
   eeat: EeatData;
+  cms?: CmsData;
 }
 
 function scoreSpeed(speed: ScoringInput["speed"]): { score: number; detail: string } {
@@ -46,6 +48,9 @@ function scoreSpeed(speed: ScoringInput["speed"]): { score: number; detail: stri
   if (seconds > 2.5) score = 5.5;
   if (seconds > 4) score = 3.5;
   if (seconds > 6) score = 2;
+  const blockingTotal = speed.renderBlockingScripts + speed.renderBlockingStyles;
+  if (blockingTotal > 15) score -= 2;
+  else if (blockingTotal > 6) score -= 1;
   return { score: clamp10(score), detail: `${seconds.toFixed(1)}s para responder` };
 }
 
@@ -119,6 +124,7 @@ function scoreEeat(eeat: EeatData): { score: number; detail: string } {
     eeat.aboutPageFound,
     eeat.privacyPolicyFound,
     eeat.contactFound,
+    eeat.cookieConsentFound,
   ];
   const passed = checks.filter(Boolean).length;
   return {
@@ -167,7 +173,7 @@ export function buildOverallScore(categories: CategoryScore[]): number {
 
 export function buildProblems(input: ScoringInput): Problem[] {
   const problems: Problem[] = [];
-  const { seo, images, mobile, speed, analytics, subpages, keywordResult, geo, eeat } = input;
+  const { seo, images, mobile, speed, analytics, subpages, keywordResult, geo, eeat, cms } = input;
 
   const seconds = speed.loadTimeMs / 1000;
   if (seconds > 2.5) {
@@ -177,6 +183,34 @@ export function buildProblems(input: ScoringInput): Problem[] {
       impacto:
         "Sites que demoram mais de 2,5s tendem a perder posições no Google e visitantes desistem de esperar.",
       severidade: seconds > 4 ? "alto" : "medio",
+    });
+  }
+
+  if (!speed.gzipEnabled) {
+    problems.push({
+      categoria: "Velocidade",
+      titulo: "Compressão GZIP/Brotli desativada no servidor",
+      impacto: "Sem compressão, o servidor envia mais dados que o necessário, atrasando o carregamento.",
+      severidade: "medio",
+    });
+  }
+
+  const blockingTotal = speed.renderBlockingScripts + speed.renderBlockingStyles;
+  if (blockingTotal > 6) {
+    problems.push({
+      categoria: "Velocidade",
+      titulo: `Mapeados ${blockingTotal} arquivo(s) bloqueante(s) que atrasam a renderização da página`,
+      impacto: "Scripts e CSS sem async/defer no <head> atrasam a primeira renderização visível da página.",
+      severidade: blockingTotal > 15 ? "alto" : "medio",
+    });
+  }
+
+  if (cms?.cms === "WordPress" && !cms.cacheDetected) {
+    problems.push({
+      categoria: "Velocidade",
+      titulo: "Cache do WordPress não identificado",
+      impacto: "Sem um plugin de cache ativo, o WordPress gera cada página do zero, deixando o site mais lento.",
+      severidade: "medio",
     });
   }
 
@@ -408,6 +442,14 @@ export function buildProblems(input: ScoringInput): Problem[] {
       categoria: "E-E-A-T",
       titulo: "Seção de perguntas frequentes (FAQ) não encontrada",
       impacto: "FAQs ajudam a esclarecer dúvidas e qualificam o conteúdo para buscas por voz e IA.",
+      severidade: "baixo",
+    });
+  }
+  if (!eeat.cookieConsentFound) {
+    problems.push({
+      categoria: "E-E-A-T",
+      titulo: "Aviso ou política de cookies não identificado",
+      impacto: "Sites sem aviso de cookies podem estar em desconformidade com a LGPD.",
       severidade: "baixo",
     });
   }

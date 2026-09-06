@@ -80,6 +80,12 @@ export interface EeatData {
   privacyPolicyFound: boolean;
   privacyPolicyUrl: string | null;
   contactFound: boolean;
+  cookieConsentFound: boolean;
+}
+
+export interface CmsData {
+  cms: "WordPress" | null;
+  cacheDetected: boolean;
 }
 
 export interface SemanticsData {
@@ -126,6 +132,7 @@ export interface AnalysisReport {
     genericAnchors: number;
     sitemapFound: boolean;
     robotsFound: boolean;
+    rssFeedFound: boolean;
   };
   images: {
     total: number;
@@ -151,6 +158,8 @@ export interface AnalysisReport {
     gzipEnabled: boolean;
     server: string | null;
     classification: "Excelente" | "Bom" | "Regular" | "Lento";
+    renderBlockingScripts: number;
+    renderBlockingStyles: number;
     source: "pagespeed" | "fetch-timing";
     lcp?: number;
     cls?: number;
@@ -162,5 +171,6 @@ export interface AnalysisReport {
   geo: GeoData;
   eeat: EeatData;
   semantics: SemanticsData;
+  cms: CmsData;
   error?: string;
 }

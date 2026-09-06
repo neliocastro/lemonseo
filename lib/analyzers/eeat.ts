@@ -10,6 +10,7 @@ export interface EeatResult {
   privacyPolicyFound: boolean;
   privacyPolicyUrl: string | null;
   contactFound: boolean;
+  cookieConsentFound: boolean;
 }
 
 const CNPJ_REGEX = /\d{2}\.?\d{3}\.?\d{3}\/?\d{4}-?\d{2}/;
@@ -43,6 +44,11 @@ export function analyzeEeat($: cheerio.CheerioAPI, bodyText: string): EeatResult
     findLinkByKeywords($, ["contato", "fale conosco", "contact"]) !== null ||
     /tel:|mailto:/.test($.html());
 
+  const html = $.html();
+  const cookieConsentFound =
+    /política de cookies|cookie policy|consentimento de cookies/i.test(bodyText) ||
+    /cookieyes|onetrust|cookiebot|lgpd.*cookie|cookie.*consent/i.test(html);
+
   return {
     cnpjFound: Boolean(cnpjMatch),
     cnpjValue: cnpjMatch ? cnpjMatch[0] : null,
@@ -53,5 +59,6 @@ export function analyzeEeat($: cheerio.CheerioAPI, bodyText: string): EeatResult
     privacyPolicyFound: privacyPolicyUrl !== null,
     privacyPolicyUrl,
     contactFound,
+    cookieConsentFound,
   };
 }

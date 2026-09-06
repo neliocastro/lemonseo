@@ -4,7 +4,7 @@ import { analyzeSeo } from "./seo";
 import { analyzeImages } from "./images";
 import { analyzeMobile } from "./mobile";
 
-const MAX_SUBPAGES = 10;
+const MAX_SUBPAGES = 20;
 const PER_REQUEST_TIMEOUT = 6000;
 
 function sameHost(a: string, b: string): boolean {

@@ -306,6 +306,19 @@ export function ResultView({ report }: { report: AnalysisReport }) {
             />
             <StatusCard label="Servidor" value={speed.server || "Não informado"} status="neutral" />
             <StatusCard label="Classificação" value={speed.classification} status={speed.classification === "Lento" ? "critical" : speed.classification === "Regular" ? "warn" : "ok"} />
+            <StatusCard
+              label="Recursos bloqueantes no <head>"
+              value={`${speed.renderBlockingScripts + speed.renderBlockingStyles} arquivo(s)`}
+              note={`${speed.renderBlockingScripts} script(s) · ${speed.renderBlockingStyles} CSS`}
+              status={speed.renderBlockingScripts + speed.renderBlockingStyles > 15 ? "critical" : speed.renderBlockingScripts + speed.renderBlockingStyles > 6 ? "warn" : "ok"}
+            />
+            {report.cms.cms && (
+              <StatusCard
+                label={`Cache do ${report.cms.cms}`}
+                value={report.cms.cacheDetected ? "Identificado" : "Não identificado"}
+                status={report.cms.cacheDetected ? "ok" : "warn"}
+              />
+            )}
           </div>
 
           {speed.lcp != null && (
@@ -355,6 +368,7 @@ export function ResultView({ report }: { report: AnalysisReport }) {
               note={seo.genericAnchors > 0 ? `${seo.genericAnchors} links com âncoras genéricas` : null}
               status={seo.internalLinks === 0 ? "critical" : "ok"}
             />
+            <StatusCard label="Feed RSS/Atom" value={seo.rssFeedFound ? "Encontrado" : "Não encontrado"} status="neutral" />
           </div>
 
           <h3 style={{ marginTop: "2rem" }}>📌 Estrutura de títulos (headings)</h3>
@@ -466,6 +480,11 @@ export function ResultView({ report }: { report: AnalysisReport }) {
               label="Página ou informações de contato"
               value={eeat.contactFound ? "Detectadas" : "Não detectadas"}
               status={eeat.contactFound ? "ok" : "critical"}
+            />
+            <StatusCard
+              label="Aviso de cookies (LGPD)"
+              value={eeat.cookieConsentFound ? "Detectado" : "Não detectado"}
+              status={eeat.cookieConsentFound ? "ok" : "warn"}
             />
           </div>
 

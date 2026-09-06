@@ -7,6 +7,7 @@ export interface FetchResult {
   pageSizeBytes: number;
   gzipEnabled: boolean;
   server: string | null;
+  headers: Headers;
 }
 
 export function normalizeUrl(input: string): string {
@@ -48,6 +49,7 @@ export async function fetchHtml(rawUrl: string, timeoutMs = 12000): Promise<Fetc
       pageSizeBytes: new TextEncoder().encode(html).length,
       gzipEnabled: /gzip|br|deflate/i.test(encoding),
       server: res.headers.get("server"),
+      headers: res.headers,
     };
   } catch (err) {
     const message = err instanceof Error ? err.message : "Erro desconhecido";

@@ -13,6 +13,8 @@ import { analyzeSiteFiles } from "./analyzers/files";
 import { analyzeGeo } from "./analyzers/geo";
 import { analyzeEeat } from "./analyzers/eeat";
 import { analyzeSemantics } from "./analyzers/semantics";
+import { analyzeHeadResources } from "./analyzers/headResources";
+import { analyzeCms } from "./analyzers/cms";
 import { buildCategories, buildOverallScore, buildProblems, classifySpeed } from "./scoring";
 import type { AnalysisReport } from "./types";
 
@@ -21,7 +23,7 @@ const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 8);
 export async function runAnalysis(rawUrl: string, rawKeyword: string | null): Promise<AnalysisReport> {
   const url = normalizeUrl(rawUrl);
   const fetchResult = await fetchHtml(url);
-  const { html, finalUrl, loadTimeMs, ttfbMs, pageSizeBytes, gzipEnabled, server } = fetchResult;
+  const { html, finalUrl, loadTimeMs, ttfbMs, pageSizeBytes, gzipEnabled, server, headers } = fetchResult;
   const $ = cheerio.load(html);
 
   const seoRaw = analyzeSeo($, finalUrl);
@@ -32,6 +34,8 @@ export async function runAnalysis(rawUrl: string, rawKeyword: string | null): Pr
   const bodyText = $("body").text();
   const eeat = analyzeEeat($, bodyText);
   const semantics = analyzeSemantics($);
+  const headResources = analyzeHeadResources($);
+  const cms = analyzeCms(html, headers);
 
   const [subpages, speedInfo, files, imagesWithWeights] = await Promise.all([
     analyzeSubpages($, finalUrl),
@@ -46,6 +50,7 @@ export async function runAnalysis(rawUrl: string, rawKeyword: string | null): Pr
     ...seoRaw,
     sitemapFound: files.sitemapFound,
     robotsFound: files.robotsFound,
+    rssFeedFound: headResources.rssFeedFound,
   };
 
   const images = { ...imagesRaw, entries: imagesWithWeights };
@@ -56,12 +61,14 @@ export async function runAnalysis(rawUrl: string, rawKeyword: string | null): Pr
     gzipEnabled,
     server,
     classification: classifySpeed(loadTimeMs),
+    renderBlockingScripts: headResources.renderBlockingScripts,
+    renderBlockingStyles: headResources.renderBlockingStyles,
     ...speedInfo,
   };
 
   const categories = buildCategories({ seo, images, mobile, speed, subpages, analytics, keywordResult, geo, eeat });
   const overallScore = buildOverallScore(categories);
-  const problems = buildProblems({ seo, images, mobile, speed, subpages, analytics, keywordResult, geo, eeat });
+  const problems = buildProblems({ seo, images, mobile, speed, subpages, analytics, keywordResult, geo, eeat, cms });
 
   const slug = nanoid();
 
@@ -84,5 +91,6 @@ export async function runAnalysis(rawUrl: string, rawKeyword: string | null): Pr
     geo,
     eeat,
     semantics,
+    cms,
   };
 }
