@@ -20,7 +20,6 @@ import {
   DocumentsIcon,
   GalleryIcon,
   HashtagIcon,
-  InfoCircleIcon,
   KeyIcon,
   LetterIcon,
   LightbulbIcon,
@@ -834,18 +833,21 @@ export function ResultView({ report }: { report: AnalysisReport }) {
         </div>
       </div>
 
-      <div className="lt-card ls-disclaimer">
-        <h3 style={{ fontSize: "1rem" }}>
-          <InfoCircleIcon size={16} style={{ verticalAlign: "-3px", marginRight: ".4rem" }} />
-          Por que essa análise vai além do PageSpeed Insights?
-        </h3>
-        <p className="lt-body" style={{ marginTop: ".6rem", fontSize: ".85rem" }}>
-          Além da página inicial, avaliamos subpáginas, SEO, GEO, E-E-A-T e outros critérios
-          técnicos e de conteúdo. Alguns desses fatores são recentes, acompanhando a evolução da
-          busca e das IAs — por isso, um ponto de melhoria aqui não significa que o site foi
-          desenvolvido de forma errada, apenas que há espaço para evoluir. Use este relatório
-          como um guia prático para orientar sua equipe de desenvolvimento.
-        </p>
+      <div className="lt-card accent ls-disclaimer">
+        <WarningTriangleIcon size={26} className="ls-disclaimer-icon" />
+        <div>
+          <h3>Por que esta análise é mais completa que um teste de velocidade comum?</h3>
+          <p className="lt-body">
+            Ferramentas como o PageSpeed avaliam basicamente a velocidade de carregamento,
+            enquanto nossa análise vai muito além da tela inicial. Nós examinamos as páginas
+            internas, a visibilidade da sua marca nas buscas tradicionais e nas novas ferramentas
+            de inteligência artificial, além da autoridade e da qualidade do conteúdo publicado.
+            Muitos desses critérios são novos no mercado digital, portanto apontar melhorias não
+            significa que o seu site foi feito de forma errada, mas sim que existem boas
+            oportunidades de atualização. Encare este relatório como um guia prático para
+            direcionar o trabalho da sua equipe técnica.
+          </p>
+        </div>
       </div>
 
       {showEmailModal && <EmailModal slug={report.slug} onClose={() => setShowEmailModal(false)} />}
