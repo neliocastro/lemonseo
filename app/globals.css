@@ -161,7 +161,7 @@ a {
   flex: 1 1 140px;
   max-width: 172px;
 }
-.ls-feature-icon { color: var(--lt-lime); margin-bottom: .5rem; }
+.ls-feature-icon { display: flex; justify-content: center; color: var(--lt-lime); margin-bottom: .5rem; }
 .ls-feature-name { font-weight: 700; font-size: .85rem; color: var(--lt-text); margin-bottom: .2rem; }
 .ls-feature-desc { font-size: .74rem; color: var(--lt-muted); }
 
