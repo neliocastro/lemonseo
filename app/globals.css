@@ -147,8 +147,9 @@ a {
 
 /* ---------- Feature chips ---------- */
 .ls-features {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: .85rem;
   max-width: 780px;
   width: 100%;
@@ -157,6 +158,8 @@ a {
 .ls-feature {
   text-align: center;
   padding: 1.1rem .9rem;
+  flex: 1 1 140px;
+  max-width: 172px;
 }
 .ls-feature-icon { color: var(--lt-lime); margin-bottom: .5rem; }
 .ls-feature-name { font-weight: 700; font-size: .85rem; color: var(--lt-text); margin-bottom: .2rem; }
