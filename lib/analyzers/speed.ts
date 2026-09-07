@@ -36,6 +36,8 @@ export async function analyzeSpeed(url: string, fallbackLoadTimeMs: number): Pro
     clearTimeout(timer);
 
     if (!res.ok) {
+      const body = await res.text();
+      console.error("[speed] PageSpeed API error", res.status, body.slice(0, 500));
       return { loadTimeMs: fallbackLoadTimeMs, source: "fetch-timing" };
     }
 
@@ -51,7 +53,8 @@ export async function analyzeSpeed(url: string, fallbackLoadTimeMs: number): Pro
       cls,
       performanceScore: perfScore != null ? Math.round(perfScore * 100) : undefined,
     };
-  } catch {
+  } catch (err) {
+    console.error("[speed] PageSpeed fetch failed", err);
     return { loadTimeMs: fallbackLoadTimeMs, source: "fetch-timing" };
   }
 }
