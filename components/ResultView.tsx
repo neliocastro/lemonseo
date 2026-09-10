@@ -35,7 +35,7 @@ import {
 
 const SEVERITY_LABEL: Record<Severity, { icon: typeof CheckCircleIcon; color: string; label: string }> = {
   alto: { icon: DangerCircleIcon, color: "var(--lt-red)", label: "Alto impacto" },
-  medio: { icon: WarningTriangleIcon, color: "var(--lt-muted)", label: "Médio impacto" },
+  medio: { icon: WarningTriangleIcon, color: "var(--lt-amber)", label: "Médio impacto" },
   baixo: { icon: CheckCircleIcon, color: "var(--lt-lime)", label: "Baixo impacto" },
 };
 
@@ -80,8 +80,8 @@ function ProblemGroup({ severity, problems }: { severity: Severity; problems: Pr
         {meta.label} <span style={{ opacity: 0.6, fontWeight: 400, fontSize: ".8rem" }}>({problems.length})</span>
       </div>
       {problems.map((p, i) => (
-        <div className="ls-problem-item" key={i}>
-          <div className="ls-problem-icon">
+        <div className={`ls-problem-item ${severity}`} key={i}>
+          <div className="ls-problem-icon" style={{ color: meta.color }}>
             <CloseCircleIcon size={16} />
           </div>
           <div>
@@ -319,7 +319,7 @@ export function ResultView({ report }: { report: AnalysisReport }) {
               <DangerCircleIcon size={13} style={{ verticalAlign: "-2px", marginRight: ".3rem" }} />
               {alto.length} alto impacto
             </span>
-            <span className="lt-badge">
+            <span className="lt-badge warn">
               <WarningTriangleIcon size={13} style={{ verticalAlign: "-2px", marginRight: ".3rem" }} />
               {medio.length} médio impacto
             </span>

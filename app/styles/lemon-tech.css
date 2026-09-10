@@ -36,12 +36,16 @@
   --lt-teal:#475F5F;         /* invariante: fundo do badge normal — sempre escuro nos dois temas */
   --lt-red:#FF6F61;          /* alerta do tema atual — SÓ para atenção alta — nunca decorativo */
   --lt-red-soft:#FFB4A8;     /* vermelho de alerta suavizado p/ textos longos, do tema atual */
+  --lt-amber:#F9D933;        /* atenção média do tema atual — impacto médio nas listas de problemas */
+  --lt-amber-soft:#F9D933;
   --lt-white:#FFFFFF;        /* constante literal — branco puro, não muda com o tema */
   --lt-muted:rgba(255,255,255,0.62);
   --lt-line:rgba(210,245,163,0.22);
   --lt-line-soft:rgba(255,255,255,0.08);
   --lt-red-line:rgba(255,111,97,0.28);
   --lt-red-bg:rgba(255,111,97,0.08);
+  --lt-amber-line:rgba(249,217,51,0.32);
+  --lt-amber-bg:rgba(249,217,51,0.08);
   --lt-card-bg:rgba(255,255,255,0.045);
   --lt-card-bg-accent:rgba(210,245,163,0.07);
   --lt-pullquote-bg:rgba(210,245,163,0.08);
@@ -51,6 +55,7 @@
   --lt-text:#FFFFFF;          /* título/texto forte — branco no dark, ink no light */
   --lt-on-accent:#0D1611;     /* texto sobre preenchimento sólido de --lt-lime (botão primário) */
   --lt-on-alert:#0D1611;      /* texto sobre preenchimento sólido de --lt-red (badge de alerta) */
+  --lt-on-amber:#0D1611;      /* texto sobre preenchimento sólido de --lt-amber (badge de atenção média) */
   --lt-pullquote-text:#E8FAD1;/* texto do callout de destaque — lime-soft no dark, o próprio accent no light */
 
   /* --- Glow: cores e opacidade específicas para a atmosfera, dissociadas do accent de texto --- */
@@ -122,10 +127,15 @@
   --lt-red-soft:#C6301F;                     /* ver nota 2 acima — igual ao --lt-red no light */
   --lt-red-line:rgba(198,48,31,0.28);
   --lt-red-bg:rgba(198,48,31,0.06);          /* alfa levemente menor que o dark p/ manter margem de contraste do texto */
+  --lt-amber:#8A6800;                        /* amarelo puro não passa em fundo claro — dourado escurecido */
+  --lt-amber-soft:#8A6800;
+  --lt-amber-line:rgba(138,104,0,0.3);
+  --lt-amber-bg:rgba(138,104,0,0.07);
 
   --lt-text:#0D1611;
   --lt-on-accent:#FFFFFF;                    /* musgo é escuro — texto sobre ele precisa ser claro (ink falha: 2.92:1) */
   --lt-on-alert:#FFFFFF;                     /* mesma razão — vermelho do light é mais escuro que o coral do dark */
+  --lt-on-amber:#FFFFFF;                     /* dourado escurecido do light também precisa de texto claro */
   --lt-pullquote-text:#3F6B1D;               /* ver nota 2 acima */
 
   --lt-glow-a:#BFE28C;                       /* pastel médio — muito claro vira invisível a 12-16% de opacidade */
@@ -170,6 +180,11 @@
 .lt-badge.alert{
   background:var(--lt-red);
   color:var(--lt-on-alert);
+}
+/* Variante de atenção média — usar para impacto médio nas listas de problemas. */
+.lt-badge.warn{
+  background:var(--lt-amber);
+  color:var(--lt-on-amber);
 }
 
 h1.lt-cover, .lt-cover-title{

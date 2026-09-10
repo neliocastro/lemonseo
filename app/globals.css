@@ -533,10 +533,13 @@ a {
 .ls-problem-item {
   display: flex;
   gap: .85rem;
-  padding: 1rem 0;
+  padding: 1rem 0 1rem .9rem;
   border-bottom: 1px solid var(--lt-line-soft);
+  border-left: 3px solid transparent;
 }
 .ls-problem-item:last-child { border-bottom: none; }
+.ls-problem-item.alto { border-left-color: var(--lt-red-line); background: var(--lt-red-bg); }
+.ls-problem-item.medio { border-left-color: var(--lt-amber-line); background: var(--lt-amber-bg); }
 .ls-problem-icon { font-size: 1.1rem; flex-shrink: 0; }
 .ls-problem-cat {
   font-size: .7rem;
