@@ -437,6 +437,20 @@ a {
   flex-wrap: wrap;
 }
 .ls-subpage-card-title { font-weight: 700; color: var(--lt-text); }
+.ls-subpage-type {
+  display: inline-block;
+  font-size: .68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  padding: .15rem .5rem;
+  border-radius: 999px;
+  margin-left: .5rem;
+  vertical-align: middle;
+  border: 1px solid var(--lt-line);
+  color: var(--lt-muted);
+}
+.ls-subpage-type.post { color: var(--lt-lime); border-color: var(--lt-lime); }
 .ls-subpage-card-url {
   font-family: var(--lt-f-mono);
   font-size: .74rem;

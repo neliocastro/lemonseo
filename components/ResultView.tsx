@@ -742,7 +742,10 @@ export function ResultView({ report }: { report: AnalysisReport }) {
                   <div key={p.url} className={`ls-subpage-card ${issues.length > 0 ? "has-issue" : ""}`}>
                     <div className="ls-subpage-card-head">
                       <div>
-                        <div className="ls-subpage-card-title">{p.title || p.label}</div>
+                        <div className="ls-subpage-card-title">
+                          {p.title || p.label}
+                          <span className={`ls-subpage-type ${p.type}`}>{p.type === "post" ? "Post" : "Página"}</span>
+                        </div>
                         <div className="ls-subpage-card-url">{p.url}</div>
                       </div>
                       <ScoreRing score={score} size={54} />

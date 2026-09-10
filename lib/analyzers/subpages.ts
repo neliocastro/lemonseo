@@ -26,7 +26,7 @@ function labelFromUrl(url: string): string {
   }
 }
 
-async function analyzeSubpage(url: string): Promise<SubpageResult> {
+async function analyzeSubpage(url: string, type: SubpageResult["type"]): Promise<SubpageResult> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), PER_REQUEST_TIMEOUT);
   const label = labelFromUrl(url);
@@ -66,10 +66,11 @@ async function analyzeSubpage(url: string): Promise<SubpageResult> {
       title,
       ok: res.status >= 200 && res.status < 400,
       label,
+      type,
       seo,
     };
   } catch {
-    return { url, status: null, title: null, ok: false, label };
+    return { url, status: null, title: null, ok: false, label, type };
   } finally {
     clearTimeout(timer);
   }
@@ -177,6 +178,9 @@ export async function analyzeSubpages(
   pages = pages.slice(0, MAX_PAGES);
   posts = posts.slice(0, MAX_POSTS);
 
-  const items = await Promise.all([...pages, ...posts].map(analyzeSubpage));
+  const items = await Promise.all([
+    ...pages.map((url) => analyzeSubpage(url, "page")),
+    ...posts.map((url) => analyzeSubpage(url, "post")),
+  ]);
   return { items, totalFound };
 }

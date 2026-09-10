@@ -21,6 +21,8 @@ export interface SubpageResult {
   ok: boolean;
   /** Rótulo curto derivado da URL, usado para identificar a página nos problemas (ex: "rede-vida"). */
   label: string;
+  /** Origem da URL: página institucional (page-sitemap.xml) ou post de blog (post-sitemap.xml). */
+  type: "page" | "post";
   seo?: {
     titleLength: number;
     metaDescription: string | null;
