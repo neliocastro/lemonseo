@@ -126,8 +126,10 @@ async function fromSitemap(baseUrl: string): Promise<SitemapCandidates> {
   }
 
   const subSitemaps = extractLocs($, "sitemap > loc");
-  const pageSitemapUrl = subSitemaps.find((loc) => /page-sitemap\.xml/i.test(loc)) ?? subSitemaps[0];
-  const postSitemapUrl = subSitemaps.find((loc) => /post-sitemap\.xml/i.test(loc));
+  // Sites com muitos posts/páginas (Rank Math, Yoast) paginam em post-sitemap1.xml,
+  // post-sitemap2.xml, etc. — o número é opcional.
+  const pageSitemapUrl = subSitemaps.find((loc) => /page-sitemap\d*\.xml/i.test(loc)) ?? subSitemaps[0];
+  const postSitemapUrl = subSitemaps.find((loc) => /post-sitemap\d*\.xml/i.test(loc));
 
   const [pages, posts] = await Promise.all([
     pageSitemapUrl ? fetchSitemapUrls(pageSitemapUrl) : Promise.resolve([]),
