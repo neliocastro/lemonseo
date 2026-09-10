@@ -380,7 +380,7 @@ export function ResultView({ report }: { report: AnalysisReport }) {
             Fonte dos dados:{" "}
             {speed.source === "pagespeed"
               ? "Google PageSpeed Insights"
-              : "Tempo de resposta do servidor (fallback — configure PAGESPEED_API_KEY para dados completos do Google)"}
+              : "Tempo de resposta do servidor"}
           </p>
 
           <div className="ls-check-grid">
