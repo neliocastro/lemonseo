@@ -165,6 +165,8 @@ export interface AnalysisReport {
     performanceScore?: number;
   };
   subpages: SubpageResult[];
+  /** Total de subpáginas encontradas no sitemap antes de aplicar o limite de análise. */
+  subpagesTotalFound: number;
   analytics: AnalyticsResult;
   keywordResult: KeywordResult | null;
   geo: GeoData;

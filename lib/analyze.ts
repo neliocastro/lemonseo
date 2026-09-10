@@ -37,12 +37,13 @@ export async function runAnalysis(rawUrl: string, rawKeyword: string | null): Pr
   const headResources = analyzeHeadResources($);
   const cms = analyzeCms(html, headers);
 
-  const [subpages, speedInfo, files, imagesWithWeights] = await Promise.all([
+  const [subpagesResult, speedInfo, files, imagesWithWeights] = await Promise.all([
     analyzeSubpages($, finalUrl),
     analyzeSpeed(finalUrl, loadTimeMs),
     analyzeSiteFiles(finalUrl),
     fetchImageWeights(imagesRaw.entries),
   ]);
+  const { items: subpages, totalFound: subpagesTotalFound } = subpagesResult;
 
   const geo = analyzeGeo($, files);
 
@@ -86,6 +87,7 @@ export async function runAnalysis(rawUrl: string, rawKeyword: string | null): Pr
     mobile,
     speed,
     subpages,
+    subpagesTotalFound,
     analytics,
     keywordResult,
     geo,

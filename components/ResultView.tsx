@@ -150,7 +150,7 @@ export function ResultView({ report }: { report: AnalysisReport }) {
     );
   }
 
-  const { seo, images, mobile, speed, analytics, subpages, geo, eeat, semantics, keywordResult } = report;
+  const { seo, images, mobile, speed, analytics, subpages, subpagesTotalFound, geo, eeat, semantics, keywordResult } = report;
 
   // Decomposição indicativa das notas exibidas nas barras de "pontuação detalhada".
   const metaTagsScore = Math.max(
@@ -723,6 +723,12 @@ export function ResultView({ report }: { report: AnalysisReport }) {
             Análise de Subpáginas
           </h3>
           <p className="lt-body">{subpages.length} página(s) interna(s) analisada(s).</p>
+          {subpagesTotalFound > subpages.length && (
+            <p className="lt-body" style={{ marginTop: ".4rem" }}>
+              Encontramos {subpagesTotalFound} subpáginas no sitemap. Analisamos apenas as primeiras{" "}
+              {subpages.length}. Para uma análise completa, entre em contato com nosso time.
+            </p>
+          )}
           {subpages.length === 0 ? (
             <p className="lt-body" style={{ marginTop: "1rem" }}>
               Nenhuma subpágina encontrada (sitemap.xml ou links internos).

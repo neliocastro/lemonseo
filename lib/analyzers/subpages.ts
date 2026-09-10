@@ -74,24 +74,52 @@ async function analyzeSubpage(url: string): Promise<SubpageResult> {
   }
 }
 
-async function fromSitemap(baseUrl: string): Promise<string[]> {
+async function fetchXml(url: string): Promise<string | null> {
   try {
-    const sitemapUrl = new URL("/sitemap.xml", baseUrl).toString();
-    const res = await fetch(sitemapUrl, {
+    const res = await fetch(url, {
       headers: { "User-Agent": "Mozilla/5.0 (compatible; LemonSEOBot/1.0)" },
     });
-    if (!res.ok) return [];
-    const xml = await res.text();
-    const $ = cheerio.load(xml, { xmlMode: true });
-    const urls: string[] = [];
-    $("loc").each((_, el) => {
-      const loc = $(el).text().trim();
-      if (loc) urls.push(loc);
-    });
-    return urls;
+    if (!res.ok) return null;
+    return await res.text();
   } catch {
-    return [];
+    return null;
   }
+}
+
+function extractLocs($: cheerio.CheerioAPI, selector: string): string[] {
+  const urls: string[] = [];
+  $(selector).each((_, el) => {
+    const loc = $(el).text().trim();
+    if (loc) urls.push(loc);
+  });
+  return urls;
+}
+
+/**
+ * Sitemaps de WordPress costumam expor um índice (sitemap_index.xml) que lista
+ * sub-sitemaps como post-sitemap.xml, page-sitemap.xml, category-sitemap.xml, etc.
+ * Esses XMLs não são páginas navegáveis — precisamos abrir o page-sitemap.xml e
+ * extrair as <url><loc> reais listadas dentro dele.
+ */
+async function fromSitemap(baseUrl: string): Promise<string[]> {
+  const sitemapUrl = new URL("/sitemap.xml", baseUrl).toString();
+  const xml = await fetchXml(sitemapUrl);
+  if (!xml) return [];
+
+  const $ = cheerio.load(xml, { xmlMode: true });
+
+  if ($("sitemapindex").length === 0) {
+    return extractLocs($, "url > loc");
+  }
+
+  const subSitemaps = extractLocs($, "sitemap > loc");
+  const pageSitemapUrl = subSitemaps.find((loc) => /page-sitemap\.xml/i.test(loc)) ?? subSitemaps[0];
+  if (!pageSitemapUrl) return [];
+
+  const pageXml = await fetchXml(pageSitemapUrl);
+  if (!pageXml) return [];
+  const $$page = cheerio.load(pageXml, { xmlMode: true });
+  return extractLocs($$page, "url > loc");
 }
 
 function fromHomeLinks($: cheerio.CheerioAPI, baseUrl: string): string[] {
@@ -111,15 +139,22 @@ function fromHomeLinks($: cheerio.CheerioAPI, baseUrl: string): string[] {
   return Array.from(links);
 }
 
+export interface SubpagesAnalysis {
+  items: SubpageResult[];
+  totalFound: number;
+}
+
 export async function analyzeSubpages(
   $: cheerio.CheerioAPI,
   baseUrl: string
-): Promise<SubpageResult[]> {
+): Promise<SubpagesAnalysis> {
   let candidates = (await fromSitemap(baseUrl)).filter((u) => sameHost(u, baseUrl));
   if (candidates.length === 0) {
     candidates = fromHomeLinks($, baseUrl);
   }
+  const totalFound = candidates.length;
   candidates = candidates.slice(0, MAX_SUBPAGES);
 
-  return Promise.all(candidates.map(analyzeSubpage));
+  const items = await Promise.all(candidates.map(analyzeSubpage));
+  return { items, totalFound };
 }
