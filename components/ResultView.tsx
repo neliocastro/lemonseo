@@ -568,17 +568,17 @@ export function ResultView({ report }: { report: AnalysisReport }) {
             <StatusCard
               label="Seção ou página de FAQ"
               value={eeat.faqFound ? "Detectada" : "Não detectada"}
-              status={eeat.faqFound ? "ok" : "warn"}
+              status={eeat.faqFound ? "ok" : "critical"}
             />
             <StatusCard
               label="Depoimentos e avaliações"
               value={eeat.testimonialsFound ? "Detectados" : "Não detectados"}
-              status={eeat.testimonialsFound ? "ok" : "warn"}
+              status={eeat.testimonialsFound ? "ok" : "critical"}
             />
             <StatusCard
               label="Página sobre a empresa"
               value={eeat.aboutPageFound ? "Detectada" : "Não detectada"}
-              status={eeat.aboutPageFound ? "ok" : "warn"}
+              status={eeat.aboutPageFound ? "ok" : "critical"}
             />
             <StatusCard
               label="Política de privacidade"
@@ -593,7 +593,7 @@ export function ResultView({ report }: { report: AnalysisReport }) {
             <StatusCard
               label="Aviso de cookies (LGPD)"
               value={eeat.cookieConsentFound ? "Detectado" : "Não detectado"}
-              status={eeat.cookieConsentFound ? "ok" : "warn"}
+              status={eeat.cookieConsentFound ? "ok" : "critical"}
             />
           </div>
 
