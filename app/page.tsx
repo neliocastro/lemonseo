@@ -8,7 +8,7 @@ const FEATURES = [
   { icon: SearchIcon, name: "SEO Completo", desc: "Meta tags, headings, links" },
   { icon: GalleryIcon, name: "Imagens", desc: "Formato, peso e ALT" },
   { icon: SmartphoneIcon, name: "Mobile", desc: "Viewport e responsividade" },
-  { icon: DocumentsIcon, name: "Subpáginas", desc: "Analisa até 20 páginas" },
+  { icon: DocumentsIcon, name: "Subpáginas", desc: "Até 15 páginas e 5 posts" },
   { icon: ChartIcon, name: "Analytics", desc: "GA4, GTM, Meta Pixel e mais" },
 ];
 
