@@ -29,6 +29,8 @@ export async function POST(req: NextRequest) {
       canal,
       email,
       createdAt: new Date().toISOString(),
+      status: "novo",
+      interactions: [],
     });
 
     // TODO: quando RESEND_API_KEY estiver configurada, disparar aqui o e-mail

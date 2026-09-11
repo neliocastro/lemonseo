@@ -4,13 +4,23 @@ import os from "os";
 import path from "path";
 import type { AnalysisReport } from "./types";
 
+export type LeadStatus = "novo" | "contatado" | "convertido" | "descartado";
+
+export interface LeadInteraction {
+  type: "status_change" | "nota";
+  message: string;
+  createdAt: string;
+}
+
 export interface Lead {
   id: string;
   reportSlug: string;
   url: string;
-  canal: "email" | "whatsapp";
+  canal: "email" | "whatsapp" | "auto";
   email?: string;
   createdAt: string;
+  status: LeadStatus;
+  interactions: LeadInteraction[];
 }
 
 /**
@@ -95,6 +105,44 @@ export async function listLeads(): Promise<Lead[]> {
     return rows.map((r) => r.data as Lead);
   }
   return readJsonFile<Lead[]>(LEADS_FILE, []);
+}
+
+export async function updateLeadStatus(
+  id: string,
+  status: LeadStatus,
+  note?: string
+): Promise<Lead | null> {
+  const interaction: LeadInteraction = {
+    type: "status_change",
+    message: note || `Status alterado para "${status}"`,
+    createdAt: new Date().toISOString(),
+  };
+
+  if (sql) {
+    await ensureSchema();
+    const rows = await sql`SELECT data FROM leads WHERE id = ${id}`;
+    const lead = rows[0]?.data as Lead | undefined;
+    if (!lead) return null;
+    const updated: Lead = {
+      ...lead,
+      status,
+      interactions: [...(lead.interactions ?? []), interaction],
+    };
+    await sql`UPDATE leads SET data = ${JSON.stringify(updated)} WHERE id = ${id}`;
+    return updated;
+  }
+
+  const all = await readJsonFile<Lead[]>(LEADS_FILE, []);
+  const index = all.findIndex((l) => l.id === id);
+  if (index === -1) return null;
+  const updated: Lead = {
+    ...all[index],
+    status,
+    interactions: [...(all[index].interactions ?? []), interaction],
+  };
+  all[index] = updated;
+  await writeJsonFile(LEADS_FILE, all);
+  return updated;
 }
 
 export async function listReports(): Promise<AnalysisReport[]> {
