@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { customAlphabet } from "nanoid";
-import { getReport, saveLead } from "@/lib/store";
+import { findLeadByReportSlug, getReport, registerLeadContact, saveLead } from "@/lib/store";
 
 const nanoid = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 10);
 
@@ -22,16 +22,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Informe um e-mail válido." }, { status: 400 });
     }
 
-    await saveLead({
-      id: nanoid(),
-      reportSlug: slug,
-      url: report.finalUrl,
-      canal,
-      email,
-      createdAt: new Date().toISOString(),
-      status: "novo",
-      interactions: [],
-    });
+    // Toda consulta já criou um lead automático (POST /api/analyze). Aqui só
+    // enriquecemos esse mesmo registro com o contato espontâneo — não
+    // duplicamos o lead. O fallback abaixo cobre relatórios antigos, gerados
+    // antes dessa automação existir.
+    const existingLead = await findLeadByReportSlug(slug);
+    if (existingLead) {
+      await registerLeadContact(existingLead.id, { canal, email });
+    } else {
+      await saveLead({
+        id: nanoid(),
+        reportSlug: slug,
+        url: report.finalUrl,
+        canal,
+        email,
+        createdAt: new Date().toISOString(),
+        status: "novo",
+        interactions: [],
+      });
+    }
 
     // TODO: quando RESEND_API_KEY estiver configurada, disparar aqui o e-mail
     // transacional com o relatório (para o lead) e a notificação interna de

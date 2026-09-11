@@ -107,27 +107,13 @@ export async function listLeads(): Promise<Lead[]> {
   return readJsonFile<Lead[]>(LEADS_FILE, []);
 }
 
-export async function updateLeadStatus(
-  id: string,
-  status: LeadStatus,
-  note?: string
-): Promise<Lead | null> {
-  const interaction: LeadInteraction = {
-    type: "status_change",
-    message: note || `Status alterado para "${status}"`,
-    createdAt: new Date().toISOString(),
-  };
-
+async function mutateLead(id: string, mutate: (lead: Lead) => Lead): Promise<Lead | null> {
   if (sql) {
     await ensureSchema();
     const rows = await sql`SELECT data FROM leads WHERE id = ${id}`;
     const lead = rows[0]?.data as Lead | undefined;
     if (!lead) return null;
-    const updated: Lead = {
-      ...lead,
-      status,
-      interactions: [...(lead.interactions ?? []), interaction],
-    };
+    const updated = mutate(lead);
     await sql`UPDATE leads SET data = ${JSON.stringify(updated)} WHERE id = ${id}`;
     return updated;
   }
@@ -135,14 +121,63 @@ export async function updateLeadStatus(
   const all = await readJsonFile<Lead[]>(LEADS_FILE, []);
   const index = all.findIndex((l) => l.id === id);
   if (index === -1) return null;
-  const updated: Lead = {
-    ...all[index],
-    status,
-    interactions: [...(all[index].interactions ?? []), interaction],
-  };
+  const updated = mutate(all[index]);
   all[index] = updated;
   await writeJsonFile(LEADS_FILE, all);
   return updated;
+}
+
+export async function updateLeadStatus(
+  id: string,
+  status: LeadStatus,
+  note?: string
+): Promise<Lead | null> {
+  return mutateLead(id, (lead) => ({
+    ...lead,
+    status,
+    interactions: [
+      ...(lead.interactions ?? []),
+      {
+        type: "status_change",
+        message: note || `Status alterado para "${status}"`,
+        createdAt: new Date().toISOString(),
+      },
+    ],
+  }));
+}
+
+export async function registerLeadContact(
+  id: string,
+  contact: { canal: "email" | "whatsapp"; email?: string }
+): Promise<Lead | null> {
+  return mutateLead(id, (lead) => ({
+    ...lead,
+    canal: contact.canal,
+    email: contact.email ?? lead.email,
+    interactions: [
+      ...(lead.interactions ?? []),
+      {
+        type: "nota",
+        message:
+          contact.canal === "email"
+            ? `Contato espontâneo via e-mail: ${contact.email}`
+            : "Contato espontâneo via WhatsApp",
+        createdAt: new Date().toISOString(),
+      },
+    ],
+  }));
+}
+
+export async function findLeadByReportSlug(slug: string): Promise<Lead | null> {
+  if (sql) {
+    await ensureSchema();
+    const rows = await sql`
+      SELECT data FROM leads WHERE report_slug = ${slug} ORDER BY created_at ASC LIMIT 1
+    `;
+    return (rows[0]?.data as Lead) ?? null;
+  }
+  const all = await readJsonFile<Lead[]>(LEADS_FILE, []);
+  return all.find((l) => l.reportSlug === slug) ?? null;
 }
 
 export async function listReports(): Promise<AnalysisReport[]> {

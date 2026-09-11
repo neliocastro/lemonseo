@@ -2,7 +2,7 @@ import Link from "next/link";
 import { listLeads, listReports } from "@/lib/store";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AdminLogoutButton } from "@/components/AdminLogoutButton";
-import { ChatIcon, LetterIcon, LockIcon } from "@/components/icons";
+import { ChatIcon, LetterIcon, LockIcon, GlobeIcon } from "@/components/icons";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -53,6 +53,7 @@ export default async function AdminPage() {
                     <th>Site</th>
                     <th>Canal</th>
                     <th>Contato</th>
+                    <th>Status</th>
                     <th>Data</th>
                     <th>Relatório</th>
                   </tr>
@@ -62,10 +63,15 @@ export default async function AdminPage() {
                     <tr key={lead.id}>
                       <td>{lead.url}</td>
                       <td style={{ display: "flex", alignItems: "center", gap: ".4rem" }}>
-                        {lead.canal === "email" ? <LetterIcon size={14} /> : <ChatIcon size={14} />}
-                        {lead.canal === "email" ? "E-mail" : "WhatsApp"}
+                        {lead.canal === "email" && <LetterIcon size={14} />}
+                        {lead.canal === "whatsapp" && <ChatIcon size={14} />}
+                        {lead.canal === "auto" && <GlobeIcon size={14} />}
+                        {lead.canal === "email" && "E-mail"}
+                        {lead.canal === "whatsapp" && "WhatsApp"}
+                        {lead.canal === "auto" && "Consulta pública"}
                       </td>
                       <td>{lead.email || "—"}</td>
+                      <td>{lead.status}</td>
                       <td>{formatDate(lead.createdAt)}</td>
                       <td>
                         <Link href={`/analise/${lead.reportSlug}`} className="lt-btn lt-btn-ghost" style={{ padding: ".35rem .8rem", fontSize: ".78rem" }}>
