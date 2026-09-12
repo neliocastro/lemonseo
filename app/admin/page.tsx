@@ -5,6 +5,7 @@ import { AdminLogoutButton } from "@/components/AdminLogoutButton";
 import { ChatIcon, LetterIcon, LockIcon, GlobeIcon } from "@/components/icons";
 import { LeadStatusSelect } from "@/components/LeadStatusSelect";
 import { LinkCheckPanel } from "@/components/LinkCheckPanel";
+import { SitemapCheckPanel } from "@/components/SitemapCheckPanel";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -91,6 +92,10 @@ export default async function AdminPage() {
         </section>
 
         <LinkCheckPanel />
+
+        <div style={{ marginTop: "1.5rem" }}>
+          <SitemapCheckPanel />
+        </div>
 
         <section className="lt-card" style={{ marginTop: "1.5rem" }}>
           <h3>Relatórios gerados ({reports.length})</h3>

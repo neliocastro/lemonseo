@@ -1,5 +1,6 @@
 import { XMLParser, XMLValidator } from "fast-xml-parser";
 import { checkLinksStatus } from "./linkStatus";
+import { normalizeUrl } from "./fetchHtml";
 import type { CrawledLink } from "./linkCrawler";
 
 const REQUEST_TIMEOUT = 8000;
@@ -39,7 +40,8 @@ async function fetchText(url: string): Promise<string | null> {
  * robots.txt (pode haver mais de uma), e só cai para o path padrão
  * /sitemap.xml se o robots.txt não referenciar nenhum.
  */
-export async function findSitemapUrls(baseUrl: string): Promise<SitemapLocation[]> {
+export async function findSitemapUrls(rawBaseUrl: string): Promise<SitemapLocation[]> {
+  const baseUrl = normalizeUrl(rawBaseUrl);
   const robotsUrl = new URL("/robots.txt", baseUrl).toString();
   const robotsTxt = await fetchText(robotsUrl);
 
@@ -323,7 +325,8 @@ async function collectUrlsetLocs(baseUrl: string): Promise<{ loc: string; sitema
  * gargalos de indexação: URLs bloqueadas, quebradas ou redirecionadas que
  * ainda assim estão anunciadas ao Google/Bing como canônicas.
  */
-export async function checkSitemapCoherence(baseUrl: string): Promise<SitemapCoherenceResult> {
+export async function checkSitemapCoherence(rawBaseUrl: string): Promise<SitemapCoherenceResult> {
+  const baseUrl = normalizeUrl(rawBaseUrl);
   const [allLocs, robotsTxt] = await Promise.all([
     collectUrlsetLocs(baseUrl),
     fetchText(new URL("/robots.txt", baseUrl).toString()),
