@@ -25,6 +25,7 @@ import {
   LightbulbIcon,
   LinkIcon,
   ListIcon,
+  LockIcon,
   PrinterIcon,
   RocketIcon,
   SearchIcon,
@@ -132,13 +133,16 @@ const TABS = [
   { key: "subpaginas", label: "Subpáginas", icon: DocumentsIcon },
   { key: "keyword", label: "Palavra-chave", icon: KeyIcon },
   { key: "semantica", label: "Semântica", icon: BrainIcon },
+  { key: "tecnico", label: "Técnico (Admin)", icon: LockIcon },
 ] as const;
 
-export function ResultView({ report }: { report: AnalysisReport }) {
+export function ResultView({ report, isAdmin = false }: { report: AnalysisReport; isAdmin?: boolean }) {
   const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("problemas");
   const [showEmailModal, setShowEmailModal] = useState(false);
 
-  const visibleTabs = TABS.filter((t) => t.key !== "keyword" || report.keywordResult);
+  const visibleTabs = TABS.filter(
+    (t) => (t.key !== "keyword" || report.keywordResult) && (t.key !== "tecnico" || isAdmin)
+  );
   const alto = report.problems.filter((p) => p.severidade === "alto");
   const medio = report.problems.filter((p) => p.severidade === "medio");
   const baixo = report.problems.filter((p) => p.severidade === "baixo");
@@ -747,6 +751,11 @@ export function ResultView({ report }: { report: AnalysisReport }) {
                           <span className={`ls-subpage-type ${p.type}`}>{p.type === "post" ? "Post" : "Página"}</span>
                         </div>
                         <div className="ls-subpage-card-url">{p.url}</div>
+                        {isAdmin && (
+                          <div className="lt-mono-meta" style={{ marginTop: ".25rem" }}>
+                            HTTP {p.status ?? "—"}
+                          </div>
+                        )}
                       </div>
                       <ScoreRing score={score} size={54} />
                     </div>
@@ -821,6 +830,64 @@ export function ResultView({ report }: { report: AnalysisReport }) {
                   </span>
                 ))}
               </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {tab === "tecnico" && isAdmin && (
+        <div className="lt-card">
+          <h3>
+            <LockIcon size={18} style={{ verticalAlign: "-3px", marginRight: ".4rem" }} />
+            Detalhamento técnico (visível apenas para administradores)
+          </h3>
+          <p className="lt-body">Dados brutos por trás das notas — para diagnóstico e negociação de consultoria.</p>
+
+          <h3 style={{ marginTop: "1.5rem" }}>Página</h3>
+          <div className="ls-check-grid">
+            <StatusCard label="Idioma declarado (html lang)" value={seo.lang || "Não declarado"} status={seo.lang ? "ok" : "warn"} />
+            <StatusCard label="CMS detectado" value={report.cms.cms || "Não identificado"} status="neutral" />
+            <StatusCard label="Cache detectado" value={report.cms.cacheDetected ? "Sim" : "Não"} status="neutral" />
+          </div>
+
+          <h3 style={{ marginTop: "1.5rem" }}>Velocidade (dados brutos)</h3>
+          <div className="ls-check-grid">
+            <StatusCard label="Fonte dos dados" value={speed.source === "pagespeed" ? "Google PageSpeed" : "Fallback (tempo de resposta)"} status="neutral" />
+            <StatusCard label="TTFB" value={`${speed.ttfbMs} ms`} status="neutral" />
+            <StatusCard label="Tempo total de carregamento" value={`${speed.loadTimeMs} ms`} status="neutral" />
+            <StatusCard label="Tamanho da página" value={formatBytes(speed.pageSizeBytes)} status="neutral" />
+            <StatusCard label="Servidor" value={speed.server || "Não informado"} status="neutral" />
+            <StatusCard label="Gzip/Brotli" value={speed.gzipEnabled ? "Ativo" : "Inativo"} status={speed.gzipEnabled ? "ok" : "warn"} />
+            <StatusCard label="Scripts bloqueando renderização" value={speed.renderBlockingScripts} status={speed.renderBlockingScripts > 0 ? "warn" : "ok"} />
+            <StatusCard label="Estilos bloqueando renderização" value={speed.renderBlockingStyles} status={speed.renderBlockingStyles > 0 ? "warn" : "ok"} />
+            {speed.performanceScore != null && (
+              <StatusCard label="Performance Score (PageSpeed)" value={`${speed.performanceScore}/100`} status="neutral" />
+            )}
+            {speed.lcp != null && <StatusCard label="LCP" value={`${speed.lcp}s`} status="neutral" />}
+            {speed.cls != null && <StatusCard label="CLS" value={speed.cls} status="neutral" />}
+          </div>
+
+          <h3 style={{ marginTop: "1.5rem" }}>GEO / IA (dados brutos)</h3>
+          <div className="ls-check-grid">
+            <StatusCard label="Crawlers de IA liberados" value={geo.crawlersOpen ? "Sim" : "Bloqueados"} status={geo.crawlersOpen ? "ok" : "warn"} />
+            <StatusCard label="Schema.org detectados" value={geo.schemaTypes.length > 0 ? geo.schemaTypes.join(", ") : "Nenhum"} status={geo.schemaTypes.length > 0 ? "ok" : "warn"} />
+            <StatusCard label="Tags semânticas HTML5" value={geo.semanticTagsFound.length > 0 ? geo.semanticTagsFound.join(", ") : "Nenhuma"} status="neutral" />
+            <StatusCard label="Padrões de resposta direta" value={geo.hasDirectAnswerPatterns ? "Sim" : "Não"} status="neutral" />
+            <StatusCard label="Listas na página" value={geo.listCount} status="neutral" />
+            <StatusCard label="Tabelas na página" value={geo.tableCount} status="neutral" />
+          </div>
+
+          <h3 style={{ marginTop: "1.5rem" }}>E-E-A-T (dados brutos)</h3>
+          <div className="ls-check-grid">
+            <StatusCard label="CNPJ encontrado" value={eeat.cnpjValue || "Não encontrado"} status={eeat.cnpjFound ? "ok" : "warn"} />
+            <StatusCard label="URL da página Sobre" value={eeat.aboutPageUrl || "—"} status="neutral" />
+            <StatusCard label="URL da política de privacidade" value={eeat.privacyPolicyUrl || "—"} status="neutral" />
+          </div>
+
+          {analytics.detected.length > 0 && (
+            <>
+              <h3 style={{ marginTop: "1.5rem" }}>Analytics detectados (bruto)</h3>
+              <p className="lt-body" style={{ fontSize: ".82rem" }}>{analytics.detected.join(", ")}</p>
             </>
           )}
         </div>

@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { getReport } from "@/lib/store";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ResultView } from "@/components/ResultView";
 import { WarningTriangleIcon } from "@/components/icons";
+import { ADMIN_COOKIE, isValidAdminCookie } from "@/lib/adminAuth";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -28,6 +30,8 @@ export default async function AnalisePage({
 }) {
   const { slug } = await params;
   const report = await getReport(slug);
+  const cookieStore = await cookies();
+  const isAdmin = isValidAdminCookie(cookieStore.get(ADMIN_COOKIE)?.value);
 
   if (!report) {
     return (
@@ -53,7 +57,7 @@ export default async function AnalisePage({
   return (
     <>
       <Header site={report.finalUrl} />
-      <ResultView report={report} />
+      <ResultView report={report} isAdmin={isAdmin} />
       <Footer />
     </>
   );
