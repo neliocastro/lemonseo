@@ -73,7 +73,18 @@ export default async function AdminPage() {
                         {lead.canal === "whatsapp" && "WhatsApp"}
                         {lead.canal === "auto" && "Consulta pública"}
                       </td>
-                      <td>{lead.email || "—"}</td>
+                      <td>
+                        {lead.email ? (
+                          lead.email
+                        ) : lead.scrapedEmails && lead.scrapedEmails.length > 0 ? (
+                          <span title="Encontrado pelo scraper no site do lead">
+                            🔍 {lead.scrapedEmails[0].email}
+                            {lead.scrapedEmails.length > 1 && ` +${lead.scrapedEmails.length - 1}`}
+                          </span>
+                        ) : (
+                          "—"
+                        )}
+                      </td>
                       <td>
                         <LeadStatusSelect leadId={lead.id} status={lead.status ?? "novo"} />
                       </td>

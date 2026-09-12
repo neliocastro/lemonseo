@@ -3,6 +3,7 @@ import { promises as fs } from "fs";
 import os from "os";
 import path from "path";
 import type { AnalysisReport } from "./types";
+import type { ExtractedEmail } from "./analyzers/emailScraper";
 
 export type LeadStatus = "novo" | "contatado" | "convertido" | "descartado";
 
@@ -21,6 +22,8 @@ export interface Lead {
   createdAt: string;
   status: LeadStatus;
   interactions: LeadInteraction[];
+  /** E-mails institucionais achados pelo scraper quando o lead não tinha contato espontâneo. */
+  scrapedEmails?: ExtractedEmail[];
 }
 
 /**
@@ -162,6 +165,24 @@ export async function registerLeadContact(
           contact.canal === "email"
             ? `Contato espontâneo via e-mail: ${contact.email}`
             : "Contato espontâneo via WhatsApp",
+        createdAt: new Date().toISOString(),
+      },
+    ],
+  }));
+}
+
+export async function attachScrapedEmails(id: string, emails: ExtractedEmail[]): Promise<Lead | null> {
+  if (emails.length === 0) return null;
+  return mutateLead(id, (lead) => ({
+    ...lead,
+    scrapedEmails: emails,
+    interactions: [
+      ...(lead.interactions ?? []),
+      {
+        type: "nota",
+        message: `Scraper encontrou ${emails.length} e-mail(s) institucional(is) no site: ${emails
+          .map((e) => e.email)
+          .join(", ")}`,
         createdAt: new Date().toISOString(),
       },
     ],
