@@ -4,6 +4,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { AdminLogoutButton } from "@/components/AdminLogoutButton";
 import { ChatIcon, LetterIcon, LockIcon, GlobeIcon } from "@/components/icons";
 import { LeadStatusSelect } from "@/components/LeadStatusSelect";
+import { LinkCheckPanel } from "@/components/LinkCheckPanel";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -89,7 +90,9 @@ export default async function AdminPage() {
           )}
         </section>
 
-        <section className="lt-card">
+        <LinkCheckPanel />
+
+        <section className="lt-card" style={{ marginTop: "1.5rem" }}>
           <h3>Relatórios gerados ({reports.length})</h3>
           {reports.length === 0 ? (
             <p className="lt-body" style={{ marginTop: ".75rem" }}>
