@@ -6,6 +6,7 @@ import { ChatIcon, LetterIcon, LockIcon, GlobeIcon } from "@/components/icons";
 import { LeadStatusSelect } from "@/components/LeadStatusSelect";
 import { LinkCheckPanel } from "@/components/LinkCheckPanel";
 import { SitemapCheckPanel } from "@/components/SitemapCheckPanel";
+import { CommercialEmailButton } from "@/components/CommercialEmailButton";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -59,6 +60,7 @@ export default async function AdminPage() {
                     <th>Status</th>
                     <th>Data</th>
                     <th>Relatório</th>
+                    <th>E-mail comercial</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -93,6 +95,9 @@ export default async function AdminPage() {
                         <Link href={`/analise/${lead.reportSlug}`} className="lt-btn lt-btn-ghost" style={{ padding: ".35rem .8rem", fontSize: ".78rem" }}>
                           Ver relatório
                         </Link>
+                      </td>
+                      <td>
+                        <CommercialEmailButton leadId={lead.id} />
                       </td>
                     </tr>
                   ))}

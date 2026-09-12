@@ -189,6 +189,16 @@ export async function attachScrapedEmails(id: string, emails: ExtractedEmail[]):
   }));
 }
 
+export async function getLead(id: string): Promise<Lead | null> {
+  if (sql) {
+    await ensureSchema();
+    const rows = await sql`SELECT data FROM leads WHERE id = ${id}`;
+    return (rows[0]?.data as Lead) ?? null;
+  }
+  const all = await readJsonFile<Lead[]>(LEADS_FILE, []);
+  return all.find((l) => l.id === id) ?? null;
+}
+
 export async function findLeadByReportSlug(slug: string): Promise<Lead | null> {
   if (sql) {
     await ensureSchema();
