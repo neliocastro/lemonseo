@@ -3,6 +3,7 @@ import { listLeads, listReports } from "@/lib/store";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { AdminLogoutButton } from "@/components/AdminLogoutButton";
 import { ChatIcon, LetterIcon, LockIcon, GlobeIcon } from "@/components/icons";
+import { LeadStatusSelect } from "@/components/LeadStatusSelect";
 import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
@@ -71,7 +72,9 @@ export default async function AdminPage() {
                         {lead.canal === "auto" && "Consulta pública"}
                       </td>
                       <td>{lead.email || "—"}</td>
-                      <td>{lead.status}</td>
+                      <td>
+                        <LeadStatusSelect leadId={lead.id} status={lead.status ?? "novo"} />
+                      </td>
                       <td>{formatDate(lead.createdAt)}</td>
                       <td>
                         <Link href={`/analise/${lead.reportSlug}`} className="lt-btn lt-btn-ghost" style={{ padding: ".35rem .8rem", fontSize: ".78rem" }}>
