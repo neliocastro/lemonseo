@@ -129,3 +129,101 @@ export async function validateSitemapSyntax(baseUrl: string): Promise<SitemapSyn
     })
   );
 }
+
+export interface SitemapBestPracticesResult {
+  url: string;
+  /** true quando este sitemap é um sub-sitemap referenciado por um sitemapindex */
+  partOfIndex: boolean;
+  urlCount: number;
+  exceedsUrlLimit: boolean;
+  lastmodCoveragePercent: number;
+  hasLowLastmodCoverage: boolean;
+}
+
+const URL_LIMIT = 50000;
+const LASTMOD_COVERAGE_THRESHOLD = 50;
+// Sites grandes podem ter dezenas de sub-sitemaps; checar só os primeiros
+// evita uma varredura muito longa numa ferramenta de diagnóstico sob demanda.
+const MAX_SUB_SITEMAPS_TO_CHECK = 10;
+
+function extractUrlEntries(xml: string): { hasLastmod: boolean }[] {
+  const parser = new XMLParser({ ignoreAttributes: false });
+  try {
+    const parsed = parser.parse(xml);
+    const children = parsed.urlset?.url;
+    if (!children) return [];
+    const list = Array.isArray(children) ? children : [children];
+    return list.map((entry) => ({ hasLastmod: typeof entry === "object" && entry.lastmod != null }));
+  } catch {
+    return [];
+  }
+}
+
+function extractSubSitemapUrls(xml: string): string[] {
+  const parser = new XMLParser({ ignoreAttributes: false });
+  try {
+    const parsed = parser.parse(xml);
+    const children = parsed.sitemapindex?.sitemap;
+    if (!children) return [];
+    const list = Array.isArray(children) ? children : [children];
+    return list
+      .map((entry) => (typeof entry === "object" ? entry.loc : String(entry)))
+      .filter((loc): loc is string => typeof loc === "string" && loc.length > 0);
+  } catch {
+    return [];
+  }
+}
+
+async function checkUrlsetBestPractices(
+  url: string,
+  partOfIndex: boolean
+): Promise<SitemapBestPracticesResult | null> {
+  const xml = await fetchText(url);
+  if (!xml) return null;
+
+  const entries = extractUrlEntries(xml);
+  if (entries.length === 0) return null;
+
+  const withLastmod = entries.filter((e) => e.hasLastmod).length;
+  const coverage = Math.round((withLastmod / entries.length) * 100);
+
+  return {
+    url,
+    partOfIndex,
+    urlCount: entries.length,
+    exceedsUrlLimit: entries.length > URL_LIMIT,
+    lastmodCoveragePercent: coverage,
+    hasLowLastmodCoverage: coverage < LASTMOD_COVERAGE_THRESHOLD,
+  };
+}
+
+/**
+ * Checa boas práticas recomendadas pelos buscadores em cada sitemap
+ * localizado: limite de 50.000 URLs por arquivo (sinalizando quando um
+ * sitemap index deveria ter sido usado), e cobertura de <lastmod> entre
+ * as URLs listadas.
+ */
+export async function checkSitemapBestPractices(baseUrl: string): Promise<SitemapBestPracticesResult[]> {
+  const syntaxResults = await validateSitemapSyntax(baseUrl);
+  const results: SitemapBestPracticesResult[] = [];
+
+  for (const s of syntaxResults) {
+    if (!s.valid) continue;
+
+    if (s.rootTag === "urlset") {
+      const result = await checkUrlsetBestPractices(s.url, false);
+      if (result) results.push(result);
+      continue;
+    }
+
+    if (s.rootTag === "sitemapindex") {
+      const xml = await fetchText(s.url);
+      if (!xml) continue;
+      const subUrls = extractSubSitemapUrls(xml).slice(0, MAX_SUB_SITEMAPS_TO_CHECK);
+      const subResults = await Promise.all(subUrls.map((subUrl) => checkUrlsetBestPractices(subUrl, true)));
+      results.push(...subResults.filter((r): r is SitemapBestPracticesResult => r !== null));
+    }
+  }
+
+  return results;
+}
