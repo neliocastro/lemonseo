@@ -1,12 +1,19 @@
 import type { AnalysisReport, Problem, Severity } from "./types";
+import type { Lead } from "./store";
 
 export interface CommercialEmailContent {
   subject: string;
   body: string;
 }
 
+export interface CommercialEmailForLead extends CommercialEmailContent {
+  /** E-mail espontâneo do lead, ou o primeiro achado pelo scraper — pode ser null se nenhum dos dois existir. */
+  to: string | null;
+}
+
 const SEVERITY_ORDER: Record<Severity, number> = { alto: 0, medio: 1, baixo: 2 };
 const MAX_PROBLEMS_LISTED = 5;
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lemonseo.vercel.app";
 
 function topProblems(problems: Problem[]): Problem[] {
   return [...problems].sort((a, b) => SEVERITY_ORDER[a.severidade] - SEVERITY_ORDER[b.severidade]).slice(0, MAX_PROBLEMS_LISTED);
@@ -51,4 +58,21 @@ Abraço,
 Equipe LemonSEO`;
 
   return { subject, body };
+}
+
+/**
+ * Preenche o template com os dados reais do relatório e do lead: destinatário
+ * (e-mail espontâneo ou achado pelo scraper) e link do relatório completo.
+ * Apenas gera o texto — nenhum e-mail é enviado aqui.
+ */
+export function generateCommercialEmailForLead(lead: Lead, report: AnalysisReport): CommercialEmailForLead {
+  const base = buildCommercialEmail(report);
+  const reportUrl = `${SITE_URL}/analise/${report.slug}`;
+  const to = lead.email ?? lead.scrapedEmails?.[0]?.email ?? null;
+
+  return {
+    to,
+    subject: base.subject,
+    body: `${base.body}\n\nRelatório completo: ${reportUrl}`,
+  };
 }
