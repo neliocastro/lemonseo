@@ -3,6 +3,7 @@ import type { SubpageResult } from "../types";
 import { analyzeSeo } from "./seo";
 import { analyzeImages } from "./images";
 import { analyzeMobile } from "./mobile";
+import { mapWithConcurrency } from "../concurrency";
 
 const MAX_PAGES = 15;
 const MAX_POSTS = 5;
@@ -10,25 +11,6 @@ const PER_REQUEST_TIMEOUT = 6000;
 // Muitos sites (hospedagem compartilhada, WAF) limitam conexões simultâneas por IP;
 // disparar 20 requisições de uma vez derruba páginas que estão, na verdade, no ar.
 const CONCURRENCY = 4;
-
-async function mapWithConcurrency<T, R>(
-  items: T[],
-  limit: number,
-  fn: (item: T) => Promise<R>
-): Promise<R[]> {
-  const results: R[] = new Array(items.length);
-  let cursor = 0;
-
-  async function worker() {
-    while (cursor < items.length) {
-      const current = cursor++;
-      results[current] = await fn(items[current]);
-    }
-  }
-
-  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
-  return results;
-}
 
 function sameHost(a: string, b: string): boolean {
   try {
