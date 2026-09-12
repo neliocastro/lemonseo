@@ -4,6 +4,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { AdminLogoutButton } from "@/components/AdminLogoutButton";
 import { ChatIcon, LetterIcon, LockIcon, GlobeIcon } from "@/components/icons";
 import { LeadStatusSelect } from "@/components/LeadStatusSelect";
+import { LeadDeleteButton } from "@/components/LeadDeleteButton";
 import { LinkCheckPanel } from "@/components/LinkCheckPanel";
 import { SitemapCheckPanel } from "@/components/SitemapCheckPanel";
 import { CommercialEmailButton } from "@/components/CommercialEmailButton";
@@ -61,6 +62,7 @@ export default async function AdminPage() {
                     <th>Data</th>
                     <th>Relatório</th>
                     <th>E-mail comercial</th>
+                    <th></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -98,6 +100,9 @@ export default async function AdminPage() {
                       </td>
                       <td>
                         <CommercialEmailButton leadId={lead.id} />
+                      </td>
+                      <td>
+                        <LeadDeleteButton leadId={lead.id} leadUrl={lead.url} />
                       </td>
                     </tr>
                   ))}

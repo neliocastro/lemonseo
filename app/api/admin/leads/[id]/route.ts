@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ADMIN_COOKIE, isValidAdminCookie } from "@/lib/adminAuth";
-import { updateLeadStatus, type LeadStatus } from "@/lib/store";
+import { deleteLead, getLead, updateLeadStatus, type LeadStatus } from "@/lib/store";
 
 const VALID_STATUSES: LeadStatus[] = ["novo", "contatado", "convertido", "descartado"];
 
@@ -23,4 +23,32 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 
   return NextResponse.json({ success: true, lead: updated });
+}
+
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  if (!isValidAdminCookie(req.cookies.get(ADMIN_COOKIE)?.value)) {
+    return NextResponse.json({ error: "Não autorizado." }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const lead = await getLead(id);
+  if (!lead) {
+    return NextResponse.json({ error: "Lead não encontrado." }, { status: 404 });
+  }
+
+  const deleted = await deleteLead(id);
+  if (!deleted) {
+    return NextResponse.json({ error: "Lead não encontrado." }, { status: 404 });
+  }
+
+  console.log(
+    JSON.stringify({
+      event: "admin_lead_deleted",
+      leadId: id,
+      leadUrl: lead.url,
+      deletedAt: new Date().toISOString(),
+    })
+  );
+
+  return NextResponse.json({ success: true });
 }

@@ -41,12 +41,14 @@ export default async function AnalisePage({
           <div style={{ color: "var(--lt-red)", marginBottom: ".5rem" }}>
             <WarningTriangleIcon size={36} />
           </div>
-          <h2 className="lt-title-sm">Relatório não encontrado</h2>
+          <h2 className="lt-title-sm">Relatório expirado</h2>
           <p className="lt-body" style={{ margin: "1rem 0" }}>
-            Esse link pode ter expirado ou o relatório não existe mais.
+            Relatórios ficam disponíveis por 120 dias após a análise. Esse link já passou desse
+            prazo (ou o relatório nunca existiu). Gere uma nova análise para ver os dados
+            atualizados do site.
           </p>
           <Link href="/" className="lt-btn lt-btn-primary">
-            ← Analisar outro site
+            ← Gerar nova análise
           </Link>
         </main>
         <Footer />

@@ -4,6 +4,7 @@ import os from "os";
 import path from "path";
 import type { AnalysisReport } from "./types";
 import type { ExtractedEmail } from "./analyzers/emailScraper";
+import { isReportExpired } from "./reportRetention";
 
 export type LeadStatus = "novo" | "contatado" | "convertido" | "descartado";
 
@@ -77,13 +78,66 @@ export async function saveReport(report: AnalysisReport): Promise<void> {
 }
 
 export async function getReport(slug: string): Promise<AnalysisReport | null> {
+  let report: AnalysisReport | null;
   if (sql) {
     await ensureSchema();
     const rows = await sql`SELECT data FROM reports WHERE slug = ${slug}`;
-    return (rows[0]?.data as AnalysisReport) ?? null;
+    report = (rows[0]?.data as AnalysisReport) ?? null;
+  } else {
+    const all = await readJsonFile<Record<string, AnalysisReport>>(REPORTS_FILE, {});
+    report = all[slug] ?? null;
+  }
+  // Relatório expirado (>120 dias) é tratado como inexistente mesmo que o cron
+  // de expurgo ainda não tenha rodado a limpeza física.
+  if (report && isReportExpired(report.createdAt)) return null;
+  return report;
+}
+
+export async function deleteReport(slug: string): Promise<boolean> {
+  if (sql) {
+    await ensureSchema();
+    const rows = await sql`DELETE FROM reports WHERE slug = ${slug} RETURNING slug`;
+    return rows.length > 0;
   }
   const all = await readJsonFile<Record<string, AnalysisReport>>(REPORTS_FILE, {});
-  return all[slug] ?? null;
+  if (!(slug in all)) return false;
+  delete all[slug];
+  await writeJsonFile(REPORTS_FILE, all);
+  return true;
+}
+
+/** Remove do armazenamento todos os relatórios com mais de 120 dias. Usado pela rotina de expurgo. */
+export async function purgeExpiredReports(): Promise<{
+  deletedCount: number;
+  deletedSlugs: string[];
+  freedBytes: number;
+}> {
+  if (sql) {
+    await ensureSchema();
+    const rows = await sql`
+      DELETE FROM reports
+      WHERE created_at <= now() - make_interval(days => 120)
+      RETURNING slug, pg_column_size(data) AS size
+    `;
+    return {
+      deletedCount: rows.length,
+      deletedSlugs: rows.map((r) => r.slug as string),
+      freedBytes: rows.reduce((sum, r) => sum + Number(r.size ?? 0), 0),
+    };
+  }
+
+  const all = await readJsonFile<Record<string, AnalysisReport>>(REPORTS_FILE, {});
+  const deletedSlugs: string[] = [];
+  let freedBytes = 0;
+  for (const [slug, report] of Object.entries(all)) {
+    if (isReportExpired(report.createdAt)) {
+      deletedSlugs.push(slug);
+      freedBytes += Buffer.byteLength(JSON.stringify(report), "utf-8");
+      delete all[slug];
+    }
+  }
+  if (deletedSlugs.length > 0) await writeJsonFile(REPORTS_FILE, all);
+  return { deletedCount: deletedSlugs.length, deletedSlugs, freedBytes };
 }
 
 export async function saveLead(lead: Lead): Promise<void> {
@@ -187,6 +241,21 @@ export async function attachScrapedEmails(id: string, emails: ExtractedEmail[]):
       },
     ],
   }));
+}
+
+export async function deleteLead(id: string): Promise<boolean> {
+  if (sql) {
+    await ensureSchema();
+    const rows = await sql`DELETE FROM leads WHERE id = ${id} RETURNING id`;
+    return rows.length > 0;
+  }
+
+  const all = await readJsonFile<Lead[]>(LEADS_FILE, []);
+  const index = all.findIndex((l) => l.id === id);
+  if (index === -1) return false;
+  all.splice(index, 1);
+  await writeJsonFile(LEADS_FILE, all);
+  return true;
 }
 
 export async function getLead(id: string): Promise<Lead | null> {
